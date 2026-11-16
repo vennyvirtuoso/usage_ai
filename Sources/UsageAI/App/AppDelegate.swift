@@ -13,6 +13,9 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         // Run as an accessory app (menu bar extra, no dock icon unless settings is open)
         NSApp.setActivationPolicy(.accessory)
 
+        // Enable system low-power sleep / App Nap for 0.0% CPU when idle
+        ProcessInfo.processInfo.enableSuddenTermination()
+
         // Initialize status bar item and menu bar popover
         StatusItemController.shared.setup()
 
@@ -43,6 +46,6 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     public func applicationWillTerminate(_ notification: Notification) {
-        // Cleanup if needed
+        // Cleanup
     }
 }

@@ -74,7 +74,8 @@ public class StatusItemController: NSObject {
         let tracker = UsageTracker.shared
         let settings = AppSettings.shared
 
-        let icon = NSImage(systemSymbolName: "chart.line.uptrend.xyaxis.circle.fill", accessibilityDescription: "Usage AI")
+        // Single clean Apple system symbol (No duplicate symbols or emojis)
+        let icon = NSImage(systemSymbolName: "sparkle", accessibilityDescription: "Usage AI")
         icon?.isTemplate = true
         button.image = icon
         button.imagePosition = .imageLeading
@@ -83,11 +84,11 @@ public class StatusItemController: NSObject {
         case .fiveHourQuota:
             let gPct = tracker.geminiFiveHourPercent
             let cPct = tracker.claudeFiveHourPercent
-            button.title = " ✨ \(gPct)%  🤖 \(cPct)%"
+            button.title = " \(gPct)% · \(cPct)%"
         case .weeklyQuota:
             let gPct = tracker.geminiWeeklyPercent
             let cPct = tracker.claudeWeeklyPercent
-            button.title = " ✨ \(gPct)%  🤖 \(cPct)%"
+            button.title = " \(gPct)% · \(cPct)%"
         case .compactIcon:
             button.title = ""
         }

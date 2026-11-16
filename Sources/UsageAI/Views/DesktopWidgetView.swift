@@ -3,7 +3,6 @@ import SwiftUI
 public struct DesktopWidgetView: View {
     @ObservedObject var tracker = UsageTracker.shared
     @ObservedObject var settings = AppSettings.shared
-    @State private var isHovered: Bool = false
 
     public var onClose: () -> Void
 
@@ -19,86 +18,81 @@ public struct DesktopWidgetView: View {
                 mediumWidgetLayout
             }
         }
-        .padding(14)
+        .padding(12)
         .background(widgetBackground)
         .opacity(settings.widgetOpacity)
-        .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.2)) {
-                self.isHovered = hovering
-            }
-        }
+        .padding(6) // Margin inside transparent window for smooth rounded shadow
     }
 
     // MARK: - Premium Composite Glass Background
     // Engineered specifically to guarantee 100% crisp legibility on ANY desktop wallpaper
+    // with NO square borders or artifacts
     private var widgetBackground: some View {
         ZStack {
             // Layer 1: System HUD Backdrop Blur
             VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
 
             // Layer 2: High-contrast obsidian tint (cuts through blinding white or dark wallpapers)
-            RoundedRectangle(cornerRadius: 24)
+            RoundedRectangle(cornerRadius: 22)
                 .fill(
                     settings.widgetTheme == .frosted
-                        ? Color(nsColor: .windowBackgroundColor).opacity(0.85)
-                        : Color(red: 0.08, green: 0.09, blue: 0.12).opacity(0.90)
+                        ? Color(nsColor: .windowBackgroundColor).opacity(0.88)
+                        : Color(red: 0.08, green: 0.09, blue: 0.12).opacity(0.92)
                 )
 
             // Layer 3: Subtle inner vignette gradient
-            RoundedRectangle(cornerRadius: 24)
+            RoundedRectangle(cornerRadius: 22)
                 .fill(
                     LinearGradient(
-                        colors: [Color.white.opacity(0.08), Color.black.opacity(0.20)],
+                        colors: [Color.white.opacity(0.08), Color.black.opacity(0.18)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
                 )
 
             // Layer 4: Ultra-crisp precision border with metallic rim highlight
-            RoundedRectangle(cornerRadius: 24)
+            RoundedRectangle(cornerRadius: 22)
                 .stroke(
                     LinearGradient(
-                        colors: [Color.white.opacity(0.40), Color.white.opacity(0.10)],
+                        colors: [Color.white.opacity(0.35), Color.white.opacity(0.08)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),
                     lineWidth: 1
                 )
         }
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        // Layer 5: Studio dual-stage drop shadow for tactile physical depth
-        .shadow(color: Color.black.opacity(0.35), radius: 24, x: 0, y: 12)
-        .shadow(color: Color.black.opacity(0.22), radius: 6, x: 0, y: 2)
+        .clipShape(RoundedRectangle(cornerRadius: 22))
+        // Smooth rounded shadow (replaces rectangular window shadow)
+        .shadow(color: Color.black.opacity(0.38), radius: 12, x: 0, y: 6)
     }
 
-    // MARK: - Medium Widget (Classic Apple HIG Size: 356x168)
+    // MARK: - Medium Widget (Classic Apple HIG Size: 344x148)
     private var mediumWidgetLayout: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 7) {
             // Top Bar
             HStack {
                 HStack(spacing: 5) {
                     Circle()
                         .fill(Color(hex: "#10B981"))
-                        .frame(width: 6, height: 6)
-                        .shadow(color: Color(hex: "#10B981").opacity(0.8), radius: 3, x: 0, y: 0)
+                        .frame(width: 5, height: 5)
 
                     Text("AI QUOTA")
                         .font(.system(size: 9, weight: .black, design: .rounded))
-                        .tracking(1.0)
+                        .tracking(0.8)
                         .foregroundColor(.white.opacity(0.85))
 
                     Text("•")
-                        .foregroundColor(.white.opacity(0.4))
+                        .foregroundColor(.white.opacity(0.35))
                         .font(.system(size: 8))
 
-                    Text("LIVE CLOUD")
+                    Text("LIVE")
                         .font(.system(size: 8, weight: .bold))
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(.white.opacity(0.45))
                 }
 
                 Spacer()
 
-                // Actions (Subtle on hover or normal)
+                // Actions (Static buttons, zero CPU overhead)
                 HStack(spacing: 6) {
                     // Manual sync
                     Button(action: {
@@ -106,9 +100,7 @@ public struct DesktopWidgetView: View {
                     }) {
                         Image(systemName: "arrow.triangle.2.circlepath")
                             .font(.system(size: 9, weight: .semibold))
-                            .foregroundColor(.white.opacity(isHovered ? 0.9 : 0.4))
-                            .rotationEffect(.degrees(tracker.isSyncing ? 360 : 0))
-                            .animation(tracker.isSyncing ? .linear(duration: 1).repeatForever(autoreverses: false) : .default, value: tracker.isSyncing)
+                            .foregroundColor(.white.opacity(0.55))
                     }
                     .buttonStyle(.plain)
                     .help("Refresh Quotas Now")
@@ -119,7 +111,7 @@ public struct DesktopWidgetView: View {
                     }) {
                         Image(systemName: settings.isDesktopWidgetPinned ? "pin.fill" : "pin")
                             .font(.system(size: 9, weight: .semibold))
-                            .foregroundColor(settings.isDesktopWidgetPinned ? Color(hex: "#38BDF8") : .white.opacity(isHovered ? 0.8 : 0.4))
+                            .foregroundColor(settings.isDesktopWidgetPinned ? Color(hex: "#38BDF8") : .white.opacity(0.55))
                     }
                     .buttonStyle(.plain)
                     .help(settings.isDesktopWidgetPinned ? "Unpin (Float above apps)" : "Pin to Desktop")
@@ -128,7 +120,7 @@ public struct DesktopWidgetView: View {
                     Button(action: onClose) {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 11))
-                            .foregroundColor(.white.opacity(isHovered ? 0.8 : 0.4))
+                            .foregroundColor(.white.opacity(0.55))
                     }
                     .buttonStyle(.plain)
                     .help("Close Widget")
@@ -142,7 +134,7 @@ public struct DesktopWidgetView: View {
                 claudeCardView
             }
         }
-        .frame(width: 338, height: 148)
+        .frame(width: 334, height: 142)
     }
 
     // MARK: - Gemini Card
@@ -156,7 +148,7 @@ public struct DesktopWidgetView: View {
         let fiveHourCountdown = accountData?.fiveHourResetCountdown ?? (agy?.fiveHourResetCountdown ?? "4h 39m")
         let weeklyCountdown = accountData?.weeklyResetCountdown ?? (agy?.weeklyResetCountdown ?? "4d 8h")
 
-        return VStack(alignment: .leading, spacing: 6) {
+        return VStack(alignment: .leading, spacing: 5) {
             // Header & Account Switcher
             HStack(alignment: .center) {
                 HStack(spacing: 4) {
@@ -208,13 +200,13 @@ public struct DesktopWidgetView: View {
                 customProgressBar(fraction: weeklyRem, gradient: weeklyRem < 0.25 ? [Color(hex: "#DC2626"), Color(hex: "#F87171")] : [Color(hex: "#2563EB"), Color(hex: "#38BDF8")])
             }
         }
-        .padding(9)
+        .padding(8)
         .background(
             RoundedRectangle(cornerRadius: 14)
                 .fill(Color.white.opacity(0.06))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
-                        .stroke(Color(hex: "#38BDF8").opacity(0.22), lineWidth: 1)
+                        .stroke(Color(hex: "#38BDF8").opacity(0.20), lineWidth: 1)
                 )
         )
         .frame(maxWidth: .infinity)
@@ -255,7 +247,7 @@ public struct DesktopWidgetView: View {
         let fiveHourCountdown = claude?.fiveHourResetCountdown ?? "3h 12m"
         let weeklyCountdown = claude?.sevenDayResetCountdown ?? "1d 15h"
 
-        return VStack(alignment: .leading, spacing: 6) {
+        return VStack(alignment: .leading, spacing: 5) {
             // Header
             HStack {
                 HStack(spacing: 4) {
@@ -312,19 +304,19 @@ public struct DesktopWidgetView: View {
                 customProgressBar(fraction: weeklyRem, gradient: [Color(hex: "#EA580C"), Color(hex: "#FB923C")])
             }
         }
-        .padding(9)
+        .padding(8)
         .background(
             RoundedRectangle(cornerRadius: 14)
                 .fill(Color.white.opacity(0.06))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
-                        .stroke(Color(hex: "#FB923C").opacity(0.22), lineWidth: 1)
+                        .stroke(Color(hex: "#FB923C").opacity(0.20), lineWidth: 1)
                 )
         )
         .frame(maxWidth: .infinity)
     }
 
-    // MARK: - Small Widget (Compact 160x160)
+    // MARK: - Small Widget (Compact 150x130)
     private var smallWidgetLayout: some View {
         VStack(spacing: 8) {
             HStack {
@@ -354,7 +346,7 @@ public struct DesktopWidgetView: View {
                         title: "GEMINI",
                         valueText: "\(tracker.geminiFiveHourPercent)%"
                     )
-                    .frame(width: 54, height: 54)
+                    .frame(width: 50, height: 50)
                     Text("Wk: \(tracker.geminiWeeklyPercent)%")
                         .font(.system(size: 9, weight: .bold))
                         .foregroundColor(.white.opacity(0.75))
@@ -369,7 +361,7 @@ public struct DesktopWidgetView: View {
                         title: "CLAUDE",
                         valueText: "\(tracker.claudeFiveHourPercent)%"
                     )
-                    .frame(width: 54, height: 54)
+                    .frame(width: 50, height: 50)
                     Text("Wk: \(tracker.claudeWeeklyPercent)%")
                         .font(.system(size: 9, weight: .bold))
                         .foregroundColor(.white.opacity(0.75))
@@ -380,7 +372,7 @@ public struct DesktopWidgetView: View {
                 .font(.system(size: 8, weight: .medium))
                 .foregroundColor(.white.opacity(0.45))
         }
-        .frame(width: 152, height: 132)
+        .frame(width: 148, height: 128)
     }
 
     // High-contrast progress bar that remains razor-sharp over any wallpaper
@@ -405,7 +397,6 @@ public struct DesktopWidgetView: View {
                         )
                     )
                     .frame(width: max(geo.size.width * CGFloat(min(max(fraction, 0.0), 1.0)), 4))
-                    .shadow(color: gradient.last?.opacity(0.6) ?? .clear, radius: 2, x: 0, y: 0)
             }
         }
         .frame(height: 6)

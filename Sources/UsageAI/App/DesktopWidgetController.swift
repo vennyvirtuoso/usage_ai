@@ -64,8 +64,8 @@ public class DesktopWidgetController: NSObject, ObservableObject {
     private func updatePanelSize() {
         guard let panel = self.panel else { return }
         let isSmall = AppSettings.shared.widgetSizeStyle == .small
-        let width: CGFloat = isSmall ? 180 : 350
-        let height: CGFloat = isSmall ? 160 : 170
+        let width: CGFloat = isSmall ? 180 : 368
+        let height: CGFloat = isSmall ? 160 : 172
         let currentFrame = panel.frame
         let newFrame = NSRect(
             x: currentFrame.origin.x,
@@ -78,8 +78,8 @@ public class DesktopWidgetController: NSObject, ObservableObject {
 
     private func createPanel() {
         let isSmall = AppSettings.shared.widgetSizeStyle == .small
-        let width: CGFloat = isSmall ? 180 : 350
-        let height: CGFloat = isSmall ? 160 : 170
+        let width: CGFloat = isSmall ? 180 : 368
+        let height: CGFloat = isSmall ? 160 : 172
 
         let newPanel = NSPanel(
             contentRect: NSRect(x: 100, y: 100, width: width, height: height),
@@ -88,9 +88,10 @@ public class DesktopWidgetController: NSObject, ObservableObject {
             defer: false
         )
 
+        // Essential settings to eliminate any square black border/shadow from AppKit:
         newPanel.isOpaque = false
         newPanel.backgroundColor = .clear
-        newPanel.hasShadow = true
+        newPanel.hasShadow = false // Let SwiftUI render the smooth rounded shadow!
         newPanel.level = AppSettings.shared.isDesktopWidgetPinned ? .belowNormal : .floating
         newPanel.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
         newPanel.isMovableByWindowBackground = true
@@ -100,13 +101,16 @@ public class DesktopWidgetController: NSObject, ObservableObject {
         })
 
         let hostingView = NSHostingView(rootView: rootView)
+        hostingView.wantsLayer = true
+        hostingView.layer?.backgroundColor = NSColor.clear.cgColor
+        hostingView.layer?.isOpaque = false
         newPanel.contentView = hostingView
 
         // Position panel at top right of the main screen by default
         if let screen = NSScreen.main {
             let screenRect = screen.visibleFrame
-            let x = screenRect.maxX - width - 40
-            let y = screenRect.maxY - height - 40
+            let x = screenRect.maxX - width - 30
+            let y = screenRect.maxY - height - 30
             newPanel.setFrameOrigin(NSPoint(x: x, y: y))
         }
 
