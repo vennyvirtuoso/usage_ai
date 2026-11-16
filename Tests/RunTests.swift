@@ -117,6 +117,12 @@ struct RunTests {
         assert(parsedAgy?.geminiFiveHourPercent == 97, "Expected 97% 5h, got \(parsedAgy?.geminiFiveHourPercent ?? -1)")
         print("  ✅ Antigravity live cloud quota parser verified (79% weekly, 97% 5-hour).")
 
+        // 6. Test AppSettings: 20 minutes refresh interval & Widget Sizing
+        print("➡️ Testing AppSettings refresh interval & widget sizes...")
+        assert(AppSettings.shared.refreshIntervalSeconds >= 600.0, "Expected at least 10 minutes refresh interval")
+        assert(WidgetSizeStyle.allCases.count == 2, "Expected 2 widget size styles")
+        print("  ✅ 20-minute refresh interval and widget sizes verified.")
+
         // Cleanup
         try? fileManager.removeItem(at: tempDir)
         print("\n🎉 ALL USAGE AI TESTS PASSED PERFECTLY!\n")

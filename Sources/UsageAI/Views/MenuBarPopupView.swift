@@ -32,7 +32,7 @@ public struct MenuBarPopupView: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text("Usage AI")
                             .font(.system(size: 15, weight: .bold, design: .rounded))
-                        Text(tracker.scanStatusMessage)
+                        Text(tracker.syncStatusMessage)
                             .font(.system(size: 10))
                             .foregroundColor(.secondary)
                     }
@@ -40,29 +40,17 @@ public struct MenuBarPopupView: View {
 
                 Spacer()
 
-                // Desktop Widget button
-                Button(action: onToggleWidget) {
-                    Label(
-                        settings.isDesktopWidgetVisible ? "Hide Widget" : "Desktop Widget",
-                        systemImage: settings.isDesktopWidgetVisible ? "macwindow.badge.plus" : "macwindow"
-                    )
-                    .font(.system(size: 11, weight: .medium))
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(settings.isDesktopWidgetVisible ? .purple : .blue)
-                .controlSize(.small)
-
                 // Refresh Button
                 Button(action: {
                     tracker.refreshNow()
                 }) {
-                    Image(systemName: tracker.isScanning ? "arrow.triangle.2.circlepath.circle.fill" : "arrow.clockwise")
+                    Image(systemName: tracker.isSyncing ? "arrow.triangle.2.circlepath.circle.fill" : "arrow.clockwise")
                         .font(.system(size: 13))
-                        .rotationEffect(.degrees(tracker.isScanning ? 360 : 0))
-                        .animation(tracker.isScanning ? .linear(duration: 1).repeatForever(autoreverses: false) : .default, value: tracker.isScanning)
+                        .rotationEffect(.degrees(tracker.isSyncing ? 360 : 0))
+                        .animation(tracker.isSyncing ? .linear(duration: 1).repeatForever(autoreverses: false) : .default, value: tracker.isSyncing)
                 }
                 .buttonStyle(.borderless)
-                .help("Refresh token usage now")
+                .help("Refresh Cloud Quotas Now")
 
                 // Settings Button
                 Button(action: onOpenSettings) {
@@ -70,89 +58,77 @@ public struct MenuBarPopupView: View {
                         .font(.system(size: 13))
                 }
                 .buttonStyle(.borderless)
-                .help("Preferences & API Keys")
+                .help("Preferences")
             }
             .padding(.horizontal, 16)
             .padding(.top, 14)
-            .padding(.bottom, 12)
+            .padding(.bottom, 10)
 
             Divider()
 
             ScrollView {
                 VStack(spacing: 12) {
-                    // Summary Top Banner: Today's Combined Usage
+                    // MARK: - Desktop Widget Promotion Card
                     HStack(spacing: 12) {
-                        // Circular Budget Ring
-                        let budgetProgress = Double(tracker.totalTokensToday) / Double(settings.dailyTokenBudget)
-                        CircularRingGauge(
-                            progress: budgetProgress,
-                            strokeWidth: 7,
-                            gradientColors: budgetProgress > 0.9 ? [.orange, .red] : [.blue, .purple],
-                            title: "DAILY BUDGET",
-                            valueText: "\(Int(min(budgetProgress, 1.0) * 100))%"
-                        )
-                        .frame(width: 68, height: 68)
+                        Image(systemName: settings.isDesktopWidgetVisible ? "macwindow.on.rectangle" : "macwindow.badge.plus")
+                            .font(.system(size: 22))
+                            .foregroundColor(settings.isDesktopWidgetVisible ? .green : .blue)
 
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("TODAY'S COMBINED TOKENS")
-                                .font(.system(size: 10, weight: .semibold))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(settings.isDesktopWidgetVisible ? "Desktop Widget Active" : "Add to Desktop as Widget")
+                                .font(.system(size: 12, weight: .bold, design: .rounded))
+                            Text(settings.isDesktopWidgetVisible ? "Pinned on your Mac desktop" : "Glance at real-time quotas on your desktop")
+                                .font(.system(size: 10))
                                 .foregroundColor(.secondary)
-
-                            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                                Text(tracker.formatTokens(tracker.totalTokensToday))
-                                    .font(.system(size: 24, weight: .black, design: .rounded))
-
-                                Text("(\(tracker.formatFullNumber(tracker.totalTokensToday)) tokens)")
-                                    .font(.system(size: 10))
-                                    .foregroundColor(.secondary)
-                            }
-
-                            HStack(spacing: 8) {
-                                Text("Cost: $\(String(format: "%.3f", tracker.totalCostToday))")
-                                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                                    .foregroundColor(.primary)
-
-                                Text("•")
-                                    .foregroundColor(.secondary)
-
-                                Text("All-time: \(tracker.formatTokens(tracker.totalTokensAllTime))")
-                                    .font(.system(size: 11))
-                                    .foregroundColor(.secondary)
-                            }
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Spacer()
+
+                        Button(action: onToggleWidget) {
+                            Text(settings.isDesktopWidgetVisible ? "Hide Widget" : "+ Add Widget")
+                                .font(.system(size: 11, weight: .semibold))
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(settings.isDesktopWidgetVisible ? .secondary : .blue)
+                        .controlSize(.small)
                     }
-                    .padding(12)
+                    .padding(10)
                     .background(
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: 10)
                             .fill(Color(nsColor: .windowBackgroundColor))
                     )
 
-                    // Provider Ratio Bar
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("USAGE DISTRIBUTION (TODAY)")
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundColor(.secondary)
-                        RatioBarView(
-                            geminiTokens: tracker.geminiSummary.todayTokens,
-                            claudeTokens: tracker.claudeSummary.todayTokens
-                        )
+                    // Widget Size Picker (if visible)
+                    if settings.isDesktopWidgetVisible {
+                        HStack {
+                            Text("Widget Size:")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.secondary)
+                            Picker("", selection: $settings.widgetSizeStyle) {
+                                Text("Medium").tag(WidgetSizeStyle.medium)
+                                Text("Small").tag(WidgetSizeStyle.small)
+                            }
+                            .pickerStyle(.segmented)
+                            .controlSize(.small)
+                            .frame(width: 140)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 4)
                     }
-                    .padding(.horizontal, 4)
 
-                    // Provider Cards
-                    ProviderCardView(summary: tracker.geminiSummary)
-                    ProviderCardView(summary: tracker.claudeSummary)
+                    // MARK: - Quota Cards
+                    ProviderCardView(isGemini: true)
+                    ProviderCardView(isGemini: false)
                 }
-                .padding(16)
+                .padding(14)
             }
-            .frame(maxHeight: 520)
+            .frame(maxHeight: 480)
 
             Divider()
 
             // Footer
             HStack {
-                Text(tracker.allRecords.isEmpty ? "No local sessions detected yet" : "Tracking \(tracker.allRecords.count) AI events")
+                Text("Refreshes automatically every 20 minutes")
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
 
@@ -164,9 +140,9 @@ public struct MenuBarPopupView: View {
                     .foregroundColor(.secondary)
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+            .padding(.vertical, 8)
             .background(Color(nsColor: .windowBackgroundColor).opacity(0.5))
         }
-        .frame(width: 400)
+        .frame(width: 390)
     }
 }

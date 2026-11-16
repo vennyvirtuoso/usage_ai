@@ -2,11 +2,14 @@ import Foundation
 import Combine
 
 public enum MenuBarDisplayMode: String, CaseIterable, Codable {
-    case cloudQuota = "Cloud Quotas (✨ 97% | 🤖 93%)"
-    case bothTokens = "Both Tokens (✨ 12k | 🤖 45k)"
-    case totalTokens = "Total Combined (⚡ 57k)"
-    case withCost = "Total + Cost (⚡ 57k · $0.24)"
+    case fiveHourQuota = "5-Hour Quotas (✨ 97% | 🤖 93%)"
+    case weeklyQuota = "Weekly Quotas (✨ 79% | 🤖 83%)"
     case compactIcon = "Minimal Icon Only"
+}
+
+public enum WidgetSizeStyle: String, CaseIterable, Codable {
+    case medium = "Medium Widget (Standard)"
+    case small = "Small Widget (Compact)"
 }
 
 public class AppSettings: ObservableObject {
@@ -14,6 +17,7 @@ public class AppSettings: ObservableObject {
 
     private let defaults = UserDefaults.standard
 
+    // Refresh interval: default 20 minutes (1200 seconds)
     @Published public var refreshIntervalSeconds: Double {
         didSet { defaults.set(refreshIntervalSeconds, forKey: "refreshIntervalSeconds") }
     }
@@ -22,8 +26,8 @@ public class AppSettings: ObservableObject {
         didSet { defaults.set(menuBarDisplayMode.rawValue, forKey: "menuBarDisplayMode") }
     }
 
-    @Published public var dailyTokenBudget: Int {
-        didSet { defaults.set(dailyTokenBudget, forKey: "dailyTokenBudget") }
+    @Published public var widgetSizeStyle: WidgetSizeStyle {
+        didSet { defaults.set(widgetSizeStyle.rawValue, forKey: "widgetSizeStyle") }
     }
 
     // Gemini Accounts
@@ -43,28 +47,9 @@ public class AppSettings: ObservableObject {
         didSet { defaults.set(selectedGeminiAccountTab, forKey: "selectedGeminiAccountTab") }
     }
 
-    @Published public var customAntigravityPath: String {
-        didSet { defaults.set(customAntigravityPath, forKey: "customAntigravityPath") }
-    }
-
-    @Published public var customClaudePath: String {
-        didSet { defaults.set(customClaudePath, forKey: "customClaudePath") }
-    }
-
-    @Published public var geminiApiKey: String {
-        didSet { defaults.set(geminiApiKey, forKey: "geminiApiKey") }
-    }
-
-    @Published public var claudeApiKey: String {
-        didSet { defaults.set(claudeApiKey, forKey: "claudeApiKey") }
-    }
-
+    // Desktop Widget
     @Published public var isDesktopWidgetVisible: Bool {
         didSet { defaults.set(isDesktopWidgetVisible, forKey: "isDesktopWidgetVisible") }
-    }
-
-    @Published public var isDesktopWidgetCompact: Bool {
-        didSet { defaults.set(isDesktopWidgetCompact, forKey: "isDesktopWidgetCompact") }
     }
 
     @Published public var isDesktopWidgetPinned: Bool {
@@ -77,33 +62,32 @@ public class AppSettings: ObservableObject {
 
     private init() {
         let savedInterval = defaults.double(forKey: "refreshIntervalSeconds")
-        self.refreshIntervalSeconds = savedInterval > 0 ? savedInterval : 15.0
+        // Default to 20 minutes (1200 seconds)
+        self.refreshIntervalSeconds = savedInterval >= 300.0 ? savedInterval : 1200.0
 
         if let rawMode = defaults.string(forKey: "menuBarDisplayMode"),
            let mode = MenuBarDisplayMode(rawValue: rawMode) {
             self.menuBarDisplayMode = mode
         } else {
-            self.menuBarDisplayMode = .cloudQuota
+            self.menuBarDisplayMode = .fiveHourQuota
         }
 
-        let savedBudget = defaults.integer(forKey: "dailyTokenBudget")
-        self.dailyTokenBudget = savedBudget > 0 ? savedBudget : 1_000_000
+        if let rawSize = defaults.string(forKey: "widgetSizeStyle"),
+           let size = WidgetSizeStyle(rawValue: rawSize) {
+            self.widgetSizeStyle = size
+        } else {
+            self.widgetSizeStyle = .medium
+        }
 
         self.geminiAccount1Email = defaults.string(forKey: "geminiAccount1Email") ?? "alexasolosix@gmail.com"
         self.geminiAccount2Email = defaults.string(forKey: "geminiAccount2Email") ?? "parasgandre@gmail.com"
         self.geminiAccount2ApiKey = defaults.string(forKey: "geminiAccount2ApiKey") ?? ""
         self.selectedGeminiAccountTab = defaults.string(forKey: "selectedGeminiAccountTab") ?? "alexasolosix@gmail.com"
 
-        self.customAntigravityPath = defaults.string(forKey: "customAntigravityPath") ?? ""
-        self.customClaudePath = defaults.string(forKey: "customClaudePath") ?? ""
-        self.geminiApiKey = defaults.string(forKey: "geminiApiKey") ?? ""
-        self.claudeApiKey = defaults.string(forKey: "claudeApiKey") ?? ""
-
         self.isDesktopWidgetVisible = defaults.bool(forKey: "isDesktopWidgetVisible")
-        self.isDesktopWidgetCompact = defaults.bool(forKey: "isDesktopWidgetCompact")
         self.isDesktopWidgetPinned = defaults.bool(forKey: "isDesktopWidgetPinned")
 
         let savedOpacity = defaults.double(forKey: "widgetOpacity")
-        self.widgetOpacity = savedOpacity > 0 ? savedOpacity : 0.95
+        self.widgetOpacity = savedOpacity > 0 ? savedOpacity : 0.98
     }
 }

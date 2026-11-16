@@ -1,43 +1,6 @@
 import SwiftUI
 
-public struct StatPillView: View {
-    public let title: String
-    public let value: String
-    public let icon: String?
-    public let tintColor: Color
-
-    public init(title: String, value: String, icon: String? = nil, tintColor: Color = .blue) {
-        self.title = title
-        self.value = value
-        self.icon = icon
-        self.tintColor = tintColor
-    }
-
-    public var body: some View {
-        HStack(spacing: 5) {
-            if let icon = icon {
-                Image(systemName: icon)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(tintColor)
-            }
-            Text(title)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundColor(.secondary)
-            Text(value)
-                .font(.system(size: 10, weight: .bold, design: .rounded))
-                .foregroundColor(.primary)
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(tintColor.opacity(0.12))
-        )
-    }
-}
-
 public struct ProviderCardView: View {
-    public let summary: ProviderUsageSummary
     public let isGemini: Bool
     @ObservedObject var tracker = UsageTracker.shared
     @ObservedObject var settings = AppSettings.shared
@@ -54,9 +17,8 @@ public struct ProviderCardView: View {
         isGemini ? Color.blue : Color.orange
     }
 
-    public init(summary: ProviderUsageSummary) {
-        self.summary = summary
-        self.isGemini = summary.provider == .geminiAntigravity
+    public init(isGemini: Bool) {
+        self.isGemini = isGemini
     }
 
     public var body: some View {
@@ -64,7 +26,7 @@ public struct ProviderCardView: View {
             // Card Header
             HStack {
                 HStack(spacing: 6) {
-                    Image(systemName: summary.provider.iconSymbol)
+                    Image(systemName: isGemini ? "sparkles" : "brain.head.profile")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundColor(.white)
                         .padding(5)
@@ -73,13 +35,13 @@ public struct ProviderCardView: View {
 
                     VStack(alignment: .leading, spacing: 1) {
                         HStack(spacing: 4) {
-                            Text(summary.provider.displayName)
+                            Text(isGemini ? "Gemini / Antigravity" : "Claude (Anthropic)")
                                 .font(.system(size: 13, weight: .semibold))
                             Circle()
                                 .fill(Color.green)
                                 .frame(width: 6, height: 6)
                         }
-                        Text(isGemini ? "Google Antigravity Cloud" : "Anthropic Cloud (vijendra9753@gmail.com)")
+                        Text(isGemini ? "Google Cloud (Synced All Servers)" : "Anthropic Cloud (vijendra9753@gmail.com)")
                             .font(.system(size: 9))
                             .foregroundColor(.secondary)
                     }
@@ -87,44 +49,40 @@ public struct ProviderCardView: View {
 
                 Spacer()
 
-                // Estimated Cost Badge
-                VStack(alignment: .trailing, spacing: 1) {
-                    Text(String(format: "$%.3f", summary.estimatedTodayCost))
-                        .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundColor(primaryColor)
-                    Text("Today's cost")
+                // Live Cloud Pill
+                HStack(spacing: 3) {
+                    Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 8))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.green)
+                    Text("Live API")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundColor(.green)
                 }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(Color.green.opacity(0.12))
+                .cornerRadius(4)
             }
 
             // MARK: - Gemini Account Switcher (if Gemini)
             if isGemini {
-                HStack(spacing: 4) {
-                    accountButton(email: settings.geminiAccount1Email, label: "alexasolosix")
-                    accountButton(email: settings.geminiAccount2Email, label: "parasgandre")
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("ACCOUNT:")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundColor(.secondary)
+
+                    HStack(spacing: 4) {
+                        accountButton(email: settings.geminiAccount1Email, label: "alexasolosix@gmail.com")
+                        accountButton(email: settings.geminiAccount2Email, label: "parasgandre@gmail.com")
+                    }
+                    .padding(3)
+                    .background(Color.primary.opacity(0.05))
+                    .cornerRadius(8)
                 }
-                .padding(2)
-                .background(Color.primary.opacity(0.06))
-                .cornerRadius(7)
             }
 
             // MARK: - Live Cloud Quota (Synced Across All Servers)
-            VStack(alignment: .leading, spacing: 7) {
-                HStack {
-                    Label("CLOUD QUOTA (SYNCED ACROSS ALL SERVERS)", systemImage: "network")
-                        .font(.system(size: 8, weight: .heavy))
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Text("Live API")
-                        .font(.system(size: 8, weight: .bold))
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 1)
-                        .background(Color.green.opacity(0.15))
-                        .foregroundColor(.green)
-                        .cornerRadius(3)
-                }
-
+            VStack(alignment: .leading, spacing: 8) {
                 if isGemini {
                     let agy = tracker.antigravityCloudUsage
                     let selectedEmail = settings.selectedGeminiAccountTab
@@ -135,29 +93,16 @@ public struct ProviderCardView: View {
                     let fiveHourCountdown = accountData?.fiveHourResetCountdown ?? (agy?.fiveHourResetCountdown ?? "4h 39m")
                     let weeklyCountdown = accountData?.weeklyResetCountdown ?? (agy?.weeklyResetCountdown ?? "4d 8h")
 
-                    // Display Account Indicator
-                    HStack {
-                        Image(systemName: "person.crop.circle.fill")
-                            .font(.system(size: 10))
-                            .foregroundColor(.blue)
-                        Text(selectedEmail)
-                            .font(.system(size: 10, weight: .bold))
-                        Spacer()
-                        Text("Active Quota")
-                            .font(.system(size: 9))
-                            .foregroundColor(.secondary)
-                    }
-
                     // 1. Five Hour Limit
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 3) {
                         HStack {
-                            Text("5-Hour Window:")
-                                .font(.system(size: 10, weight: .medium))
+                            Text("5-Hour Limit Remaining:")
+                                .font(.system(size: 11, weight: .medium))
                             Spacer()
-                            Text("\(Int(fiveHourRem * 100))% remaining")
-                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                            Text("\(Int(fiveHourRem * 100))%")
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
                                 .foregroundColor(.green)
-                            Text("(\(fiveHourCountdown))")
+                            Text("(resets in \(fiveHourCountdown))")
                                 .font(.system(size: 9))
                                 .foregroundColor(.secondary)
                         }
@@ -165,19 +110,19 @@ public struct ProviderCardView: View {
                     }
 
                     // 2. Weekly Limit
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 3) {
                         HStack {
-                            Text("Weekly Quota:")
-                                .font(.system(size: 10, weight: .medium))
+                            Text("Weekly Plan Limit Remaining:")
+                                .font(.system(size: 11, weight: .medium))
                             Spacer()
-                            Text("\(Int(weeklyRem * 100))% remaining")
-                                .font(.system(size: 10, weight: .bold, design: .rounded))
-                                .foregroundColor(weeklyRem < 0.2 ? .red : .blue)
-                            Text("(\(weeklyCountdown))")
+                            Text("\(Int(weeklyRem * 100))%")
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .foregroundColor(weeklyRem < 0.25 ? .red : .blue)
+                            Text("(resets in \(weeklyCountdown))")
                                 .font(.system(size: 9))
                                 .foregroundColor(.secondary)
                         }
-                        quotaBar(fraction: weeklyRem, color: weeklyRem < 0.2 ? .red : .blue)
+                        quotaBar(fraction: weeklyRem, color: weeklyRem < 0.25 ? .red : .blue)
                     }
 
                 } else {
@@ -187,15 +132,15 @@ public struct ProviderCardView: View {
                     let weeklyRem = claude != nil ? (claude!.sevenDayRemaining / 100.0) : 0.83
 
                     // 1. Five Hour Session Limit
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 3) {
                         HStack {
-                            Text("5-Hour Window:")
-                                .font(.system(size: 10, weight: .medium))
+                            Text("5-Hour Rolling Limit Remaining:")
+                                .font(.system(size: 11, weight: .medium))
                             Spacer()
-                            Text("\(Int(fiveHourRem * 100))% remaining")
-                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                            Text("\(Int(fiveHourRem * 100))%")
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
                                 .foregroundColor(.green)
-                            Text("(\(claude?.fiveHourResetCountdown ?? "3h 12m"))")
+                            Text("(resets in \(claude?.fiveHourResetCountdown ?? "3h 12m"))")
                                 .font(.system(size: 9))
                                 .foregroundColor(.secondary)
                         }
@@ -203,103 +148,33 @@ public struct ProviderCardView: View {
                     }
 
                     // 2. Weekly Limit
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 3) {
                         HStack {
-                            Text("Weekly Quota:")
-                                .font(.system(size: 10, weight: .medium))
+                            Text("Weekly Limit Remaining:")
+                                .font(.system(size: 11, weight: .medium))
                             Spacer()
-                            Text("\(Int(weeklyRem * 100))% remaining")
-                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                            Text("\(Int(weeklyRem * 100))%")
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
                                 .foregroundColor(.orange)
-                            Text("(\(claude?.sevenDayResetCountdown ?? "1d 15h"))")
+                            Text("(resets in \(claude?.sevenDayResetCountdown ?? "1d 15h"))")
                                 .font(.system(size: 9))
                                 .foregroundColor(.secondary)
                         }
                         quotaBar(fraction: weeklyRem, color: .orange)
                     }
-                }
-            }
-            .padding(9)
-            .background(Color.primary.opacity(0.04))
-            .cornerRadius(8)
 
-            // MARK: - Active Session Context Window
-            if summary.quota.contextTokensCurrentSession > 0 {
-                VStack(alignment: .leading, spacing: 3) {
+                    // Breakdown pill
                     HStack {
-                        Text("Active Context Window:")
-                            .font(.system(size: 10, weight: .medium))
+                        Text("Active: Claude Code (99% utilization share)")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundColor(.secondary)
                         Spacer()
-                        Text("\(tracker.formatTokens(summary.quota.contextTokensCurrentSession)) / \(tracker.formatTokens(summary.quota.contextWindowLimit)) (\(String(format: "%.1f%%", summary.quota.contextPercent * 100)))")
-                            .font(.system(size: 10, weight: .semibold, design: .rounded))
-                            .foregroundColor(summary.quota.contextPercent > 0.8 ? .red : .primary)
                     }
-                    quotaBar(fraction: summary.quota.contextPercent, color: summary.quota.contextPercent > 0.8 ? .red : primaryColor)
-                }
-                .padding(.horizontal, 2)
-            }
-
-            // MARK: - CLI /usage Section
-            HStack(spacing: 8) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("TODAY'S TOKENS")
-                        .font(.system(size: 9, weight: .semibold))
-                        .foregroundColor(.secondary)
-                    Text(tracker.formatTokens(summary.todayTokens))
-                        .font(.system(size: 17, weight: .heavy, design: .rounded))
-                        .foregroundColor(.primary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                Divider().frame(height: 28)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("ALL TIME")
-                        .font(.system(size: 9, weight: .semibold))
-                        .foregroundColor(.secondary)
-                    Text(tracker.formatTokens(summary.totalTokens))
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                Divider().frame(height: 28)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("CACHE SAVINGS")
-                        .font(.system(size: 9, weight: .semibold))
-                        .foregroundColor(.secondary)
-                    Text("\(Int(summary.cacheHitRatio * 100))%")
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundColor(summary.cacheHitRatio > 0.4 ? .green : .secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .padding(.vertical, 2)
-
-            // Token Details breakdown
-            HStack(spacing: 6) {
-                StatPillView(
-                    title: "In",
-                    value: tracker.formatTokens(summary.todayInputTokens),
-                    icon: "arrow.down.right",
-                    tintColor: primaryColor
-                )
-                StatPillView(
-                    title: "Out",
-                    value: tracker.formatTokens(summary.todayOutputTokens),
-                    icon: "arrow.up.left",
-                    tintColor: .purple
-                )
-                if summary.cacheReadTokens > 0 {
-                    StatPillView(
-                        title: "Cached",
-                        value: tracker.formatTokens(summary.todayCachedTokens),
-                        icon: "bolt.fill",
-                        tintColor: .green
-                    )
                 }
             }
+            .padding(10)
+            .background(Color.primary.opacity(0.04))
+            .cornerRadius(10)
         }
         .padding(12)
         .background(
@@ -318,17 +193,19 @@ public struct ProviderCardView: View {
         return Button(action: {
             settings.selectedGeminiAccountTab = email
         }) {
-            HStack(spacing: 4) {
+            HStack(spacing: 5) {
                 Circle()
                     .fill(isSelected ? Color.blue : Color.secondary.opacity(0.4))
-                    .frame(width: 5, height: 5)
+                    .frame(width: 6, height: 6)
                 Text(label)
                     .font(.system(size: 10, weight: isSelected ? .bold : .medium))
+                    .lineLimit(1)
             }
             .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.vertical, 5)
+            .frame(maxWidth: .infinity)
             .background(isSelected ? Color(nsColor: .controlBackgroundColor) : Color.clear)
-            .cornerRadius(5)
+            .cornerRadius(6)
         }
         .buttonStyle(.plain)
     }
@@ -337,18 +214,12 @@ public struct ProviderCardView: View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 3)
-                    .fill(Color.primary.opacity(0.08))
+                    .fill(Color.primary.opacity(0.1))
                 RoundedRectangle(cornerRadius: 3)
                     .fill(color)
                     .frame(width: max(geo.size.width * CGFloat(min(max(fraction, 0.0), 1.0)), 2))
             }
         }
-        .frame(height: 5)
-    }
-
-    private func cleanModelName(_ name: String) -> String {
-        name.replacingOccurrences(of: "gemini-", with: "")
-            .replacingOccurrences(of: "claude-", with: "")
-            .replacingOccurrences(of: "-20241022", with: "")
+        .frame(height: 6)
     }
 }

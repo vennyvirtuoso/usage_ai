@@ -54,7 +54,9 @@ public class StatusItemController: NSObject {
         UsageTracker.shared.objectWillChange
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
-                self?.updateDisplay()
+                DispatchQueue.main.async {
+                    self?.updateDisplay()
+                }
             }
             .store(in: &cancellables)
 
@@ -78,21 +80,14 @@ public class StatusItemController: NSObject {
         button.imagePosition = .imageLeading
 
         switch settings.menuBarDisplayMode {
-        case .cloudQuota:
-            let gPct = tracker.antigravityCloudUsage?.geminiFiveHourPercent ?? Int(tracker.geminiSummary.quota.quotaRemainingPercent * 100)
-            let cPct = tracker.claudeCloudUsage != nil ? Int(tracker.claudeCloudUsage!.fiveHourRemaining.rounded()) : Int(tracker.claudeSummary.quota.quotaRemainingPercent * 100)
+        case .fiveHourQuota:
+            let gPct = tracker.geminiFiveHourPercent
+            let cPct = tracker.claudeFiveHourPercent
             button.title = " ✨ \(gPct)%  🤖 \(cPct)%"
-        case .bothTokens:
-            let gStr = tracker.formatTokens(tracker.geminiSummary.todayTokens)
-            let cStr = tracker.formatTokens(tracker.claudeSummary.todayTokens)
-            button.title = " ✨ \(gStr)  🤖 \(cStr)"
-        case .totalTokens:
-            let totStr = tracker.formatTokens(tracker.totalTokensToday)
-            button.title = " ⚡ \(totStr)"
-        case .withCost:
-            let totStr = tracker.formatTokens(tracker.totalTokensToday)
-            let costStr = String(format: "$%.2f", tracker.totalCostToday)
-            button.title = " ⚡ \(totStr) · \(costStr)"
+        case .weeklyQuota:
+            let gPct = tracker.geminiWeeklyPercent
+            let cPct = tracker.claudeWeeklyPercent
+            button.title = " ✨ \(gPct)%  🤖 \(cPct)%"
         case .compactIcon:
             button.title = ""
         }
@@ -102,11 +97,10 @@ public class StatusItemController: NSObject {
         guard let event = NSApp.currentEvent else { return }
 
         if event.type == .rightMouseUp {
-            // Right-click opens context menu directly
             let menu = NSMenu()
             menu.addItem(NSMenuItem(title: "Usage AI", action: nil, keyEquivalent: ""))
             menu.addItem(NSMenuItem.separator())
-            menu.addItem(NSMenuItem(title: "Refresh Now", action: #selector(refreshAction), keyEquivalent: "r"))
+            menu.addItem(NSMenuItem(title: "Refresh Cloud Quotas Now", action: #selector(refreshAction), keyEquivalent: "r"))
             menu.addItem(NSMenuItem(title: "Toggle Desktop Widget", action: #selector(toggleWidgetAction), keyEquivalent: "w"))
             menu.addItem(NSMenuItem(title: "Preferences...", action: #selector(settingsAction), keyEquivalent: ","))
             menu.addItem(NSMenuItem.separator())
@@ -119,7 +113,6 @@ public class StatusItemController: NSObject {
             statusItem?.button?.performClick(nil)
             statusItem?.menu = nil
         } else {
-            // Left click toggles rich popover
             togglePopover(sender)
         }
     }

@@ -32,6 +32,13 @@ public class DesktopWidgetController: NSObject, ObservableObject {
                 self?.updateWindowLevel(pinned: pinned)
             }
             .store(in: &cancellables)
+
+        AppSettings.shared.$widgetSizeStyle
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.updatePanelSize()
+            }
+            .store(in: &cancellables)
     }
 
     public func toggleWidget() {
@@ -42,6 +49,7 @@ public class DesktopWidgetController: NSObject, ObservableObject {
         if panel == nil {
             createPanel()
         }
+        updatePanelSize()
         panel?.orderFrontRegardless()
     }
 
@@ -50,15 +58,32 @@ public class DesktopWidgetController: NSObject, ObservableObject {
     }
 
     private func updateWindowLevel(pinned: Bool) {
-        // If pinned, keep behind regular apps (like desktop wallpaper/widget level)
-        // If unpinned, float above normal windows
         panel?.level = pinned ? .belowNormal : .floating
     }
 
+    private func updatePanelSize() {
+        guard let panel = self.panel else { return }
+        let isSmall = AppSettings.shared.widgetSizeStyle == .small
+        let width: CGFloat = isSmall ? 180 : 350
+        let height: CGFloat = isSmall ? 160 : 170
+        let currentFrame = panel.frame
+        let newFrame = NSRect(
+            x: currentFrame.origin.x,
+            y: currentFrame.origin.y + (currentFrame.height - height),
+            width: width,
+            height: height
+        )
+        panel.setFrame(newFrame, display: true, animate: true)
+    }
+
     private func createPanel() {
+        let isSmall = AppSettings.shared.widgetSizeStyle == .small
+        let width: CGFloat = isSmall ? 180 : 350
+        let height: CGFloat = isSmall ? 160 : 170
+
         let newPanel = NSPanel(
-            contentRect: NSRect(x: 100, y: 100, width: 280, height: 180),
-            styleMask: [.borderless, .nonactivatingPanel, .resizable],
+            contentRect: NSRect(x: 100, y: 100, width: width, height: height),
+            styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
@@ -80,8 +105,8 @@ public class DesktopWidgetController: NSObject, ObservableObject {
         // Position panel at top right of the main screen by default
         if let screen = NSScreen.main {
             let screenRect = screen.visibleFrame
-            let x = screenRect.maxX - 300
-            let y = screenRect.maxY - 220
+            let x = screenRect.maxX - width - 40
+            let y = screenRect.maxY - height - 40
             newPanel.setFrameOrigin(NSPoint(x: x, y: y))
         }
 
