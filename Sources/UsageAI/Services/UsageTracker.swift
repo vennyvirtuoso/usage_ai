@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import SwiftUI
+import WidgetKit
 
 @MainActor
 public class UsageTracker: ObservableObject {
@@ -41,12 +42,12 @@ public class UsageTracker: ObservableObject {
     public var menuBarDisplayString: String {
         let settings = AppSettings.shared
         switch settings.menuBarDisplayMode {
-        case .fiveHourQuota:
-            return "✨ \(geminiFiveHourPercent)%  🤖 \(claudeFiveHourPercent)%"
-        case .weeklyQuota:
-            return "✨ \(geminiWeeklyPercent)%  🤖 \(claudeWeeklyPercent)%"
-        case .compactIcon:
+        case .iconOnly:
             return ""
+        case .fiveHourQuota:
+            return "\(geminiFiveHourPercent)% · \(claudeFiveHourPercent)%"
+        case .weeklyQuota:
+            return "\(geminiWeeklyPercent)% · \(claudeWeeklyPercent)%"
         }
     }
 
@@ -93,6 +94,20 @@ public class UsageTracker: ObservableObject {
                 self.isSyncing = false
                 self.lastRefreshedDate = Date()
                 self.syncStatusMessage = "Synced at \(DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium))"
+
+                // Save shared snapshot for macOS Notification Center widget
+                let snapshot = SharedQuotaSnapshot(
+                    geminiFiveHourPercent: self.geminiFiveHourPercent,
+                    geminiWeeklyPercent: self.geminiWeeklyPercent,
+                    geminiFiveHourCountdown: agyQuota?.fiveHourResetCountdown ?? "4h 39m",
+                    geminiWeeklyCountdown: agyQuota?.weeklyResetCountdown ?? "4d 8h",
+                    claudeFiveHourPercent: self.claudeFiveHourPercent,
+                    claudeWeeklyPercent: self.claudeWeeklyPercent,
+                    claudeFiveHourCountdown: claudeQuota?.fiveHourResetCountdown ?? "3h 12m",
+                    claudeWeeklyCountdown: claudeQuota?.sevenDayResetCountdown ?? "1d 15h"
+                )
+                snapshot.save()
+                WidgetCenter.shared.reloadAllTimelines()
             }
         }
     }

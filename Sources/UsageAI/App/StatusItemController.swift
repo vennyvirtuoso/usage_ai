@@ -15,7 +15,8 @@ public class StatusItemController: NSObject {
     }
 
     public func setup() {
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        // Variable length or standard square icon length
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         self.statusItem = item
 
         if let button = item.button {
@@ -60,38 +61,34 @@ public class StatusItemController: NSObject {
             }
             .store(in: &cancellables)
 
-        AppSettings.shared.$menuBarDisplayMode
+        AppSettings.shared.objectWillChange
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
-                self?.updateDisplay()
+                DispatchQueue.main.async {
+                    self?.updateDisplay()
+                }
             }
             .store(in: &cancellables)
     }
 
     public func updateDisplay() {
-        guard let button = statusItem?.button else { return }
+        guard let item = statusItem, let button = item.button else { return }
 
-        let tracker = UsageTracker.shared
-        let settings = AppSettings.shared
+        // Single custom Usage AI icon (Zero emoji clutter, zero duplicate symbols!)
+        button.image = CustomMenuBarIcon.createIcon()
 
-        // Single clean Apple system symbol (No duplicate symbols or emojis)
-        let icon = NSImage(systemSymbolName: "sparkle", accessibilityDescription: "Usage AI")
-        icon?.isTemplate = true
-        button.image = icon
-        button.imagePosition = .imageLeading
-
-        switch settings.menuBarDisplayMode {
-        case .fiveHourQuota:
-            let gPct = tracker.geminiFiveHourPercent
-            let cPct = tracker.claudeFiveHourPercent
-            button.title = " \(gPct)% · \(cPct)%"
-        case .weeklyQuota:
-            let gPct = tracker.geminiWeeklyPercent
-            let cPct = tracker.claudeWeeklyPercent
-            button.title = " \(gPct)% · \(cPct)%"
-        case .compactIcon:
+        let displayText = UsageTracker.shared.menuBarDisplayString
+        if displayText.isEmpty {
+            item.length = NSStatusItem.squareLength
+            button.imagePosition = .imageOnly
             button.title = ""
+        } else {
+            item.length = NSStatusItem.variableLength
+            button.imagePosition = .imageLeading
+            button.title = " " + displayText
         }
+
+        button.toolTip = "Usage AI — Gemini: \(UsageTracker.shared.geminiFiveHourPercent)% · Claude: \(UsageTracker.shared.claudeFiveHourPercent)%"
     }
 
     @objc private func statusItemClicked(_ sender: NSStatusBarButton) {

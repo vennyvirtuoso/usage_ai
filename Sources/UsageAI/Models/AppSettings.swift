@@ -2,9 +2,9 @@ import Foundation
 import Combine
 
 public enum MenuBarDisplayMode: String, CaseIterable, Codable {
-    case fiveHourQuota = "5-Hour Quotas (✨ 97% | 🤖 93%)"
-    case weeklyQuota = "Weekly Quotas (✨ 79% | 🤖 83%)"
-    case compactIcon = "Minimal Icon Only"
+    case iconOnly = "Single Custom Icon Only (Recommended)"
+    case fiveHourQuota = "Custom Icon + 5-Hour Quotas (97% · 93%)"
+    case weeklyQuota = "Custom Icon + Weekly Quotas (79% · 83%)"
 }
 
 public enum WidgetSizeStyle: String, CaseIterable, Codable {
@@ -78,7 +78,7 @@ public class AppSettings: ObservableObject {
            let mode = MenuBarDisplayMode(rawValue: rawMode) {
             self.menuBarDisplayMode = mode
         } else {
-            self.menuBarDisplayMode = .fiveHourQuota
+            self.menuBarDisplayMode = .iconOnly
         }
 
         if let rawSize = defaults.string(forKey: "widgetSizeStyle"),
