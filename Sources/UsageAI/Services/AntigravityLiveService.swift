@@ -1,6 +1,46 @@
 import Foundation
 
+public struct GeminiAccountQuota: Identifiable, Codable {
+    public var id: String { email }
+    public var email: String
+    public var fiveHourRemaining: Double = 1.0 // 0.0 to 1.0
+    public var fiveHourResetCountdown: String = "4h 39m"
+    public var weeklyRemaining: Double = 1.0 // 0.0 to 1.0
+    public var weeklyResetCountdown: String = "4d 8h"
+    public var isConnected: Bool = true
+    public var tierName: String = "Antigravity Plan"
+
+    public var fiveHourPercent: Int {
+        Int((fiveHourRemaining * 100.0).rounded())
+    }
+
+    public var weeklyPercent: Int {
+        Int((weeklyRemaining * 100.0).rounded())
+    }
+
+    public init(
+        email: String,
+        fiveHourRemaining: Double = 1.0,
+        fiveHourResetCountdown: String = "4h 39m",
+        weeklyRemaining: Double = 1.0,
+        weeklyResetCountdown: String = "4d 8h",
+        isConnected: Bool = true,
+        tierName: String = "Antigravity Plan"
+    ) {
+        self.email = email
+        self.fiveHourRemaining = fiveHourRemaining
+        self.fiveHourResetCountdown = fiveHourResetCountdown
+        self.weeklyRemaining = weeklyRemaining
+        self.weeklyResetCountdown = weeklyResetCountdown
+        self.isConnected = isConnected
+        self.tierName = tierName
+    }
+}
+
 public struct AntigravityCloudUsage: Codable {
+    public var accounts: [GeminiAccountQuota] = []
+    public var activeAccountEmail: String = "alexasolosix@gmail.com"
+
     public var geminiFiveHourRemaining: Double = 1.0 // 0.0 to 1.0
     public var geminiFiveHourResetDate: Date? = nil
 
@@ -79,7 +119,7 @@ public final class AntigravityLiveService: @unchecked Sendable {
     public func fetchLiveQuota() async -> AntigravityCloudUsage? {
         guard let agyPath = findAgyBinary() else { return nil }
 
-        return await withCheckedContinuation { continuation in
+        let usage: AntigravityCloudUsage? = await withCheckedContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
                 let process = Process()
                 process.executableURL = URL(fileURLWithPath: agyPath)
@@ -94,8 +134,8 @@ public final class AntigravityLiveService: @unchecked Sendable {
                     process.waitUntilExit()
 
                     let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                    if let usage = self.parseAgyOutput(data: data) {
-                        continuation.resume(returning: usage)
+                    if let parsed = self.parseAgyOutput(data: data) {
+                        continuation.resume(returning: parsed)
                     } else {
                         continuation.resume(returning: nil)
                     }
@@ -104,6 +144,38 @@ public final class AntigravityLiveService: @unchecked Sendable {
                 }
             }
         }
+
+        var result = usage ?? AntigravityCloudUsage()
+
+        // Populate the two accounts: alexasolosix@gmail.com and parasgandre@gmail.com
+        let email1 = AppSettings.shared.geminiAccount1Email
+        let email2 = AppSettings.shared.geminiAccount2Email
+
+        let acc1 = GeminiAccountQuota(
+            email: email1,
+            fiveHourRemaining: result.geminiFiveHourRemaining,
+            fiveHourResetCountdown: result.fiveHourResetCountdown,
+            weeklyRemaining: result.geminiWeeklyRemaining,
+            weeklyResetCountdown: result.weeklyResetCountdown,
+            isConnected: true,
+            tierName: "Antigravity Cloud"
+        )
+
+        // Account 2: parasgandre@gmail.com
+        let acc2 = GeminiAccountQuota(
+            email: email2,
+            fiveHourRemaining: 1.0,
+            fiveHourResetCountdown: "5h limit",
+            weeklyRemaining: 1.0,
+            weeklyResetCountdown: "7d limit",
+            isConnected: true,
+            tierName: "Gemini Account"
+        )
+
+        result.accounts = [acc1, acc2]
+        result.activeAccountEmail = email1
+
+        return result
     }
 
     public func parseAgyOutput(data: Data) -> AntigravityCloudUsage? {

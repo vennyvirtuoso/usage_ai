@@ -21,6 +21,11 @@ public struct SettingsView: View {
                     Label("General", systemImage: "gearshape")
                 }
 
+            accountsTab
+                .tabItem {
+                    Label("Accounts", systemImage: "person.2")
+                }
+
             sourcesTab
                 .tabItem {
                     Label("Local Logs", systemImage: "folder")
@@ -37,10 +42,50 @@ public struct SettingsView: View {
                 }
         }
         .padding(20)
-        .frame(width: 480, height: 380)
+        .frame(width: 500, height: 420)
         .onAppear {
             geminiKeyInput = settings.geminiApiKey
             claudeKeyInput = settings.claudeApiKey
+        }
+    }
+
+    // MARK: - Accounts Tab
+    private var accountsTab: some View {
+        Form {
+            Section("Gemini Antigravity Accounts") {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Primary Account (Local & Remote Sync):")
+                        .font(.caption)
+                    TextField("Account 1 Email", text: $settings.geminiAccount1Email)
+                        .textFieldStyle(.roundedBorder)
+                    Text("Auto-synced with ~/.gemini/bin/agy /quota")
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Secondary Account:")
+                        .font(.caption)
+                    TextField("Account 2 Email", text: $settings.geminiAccount2Email)
+                        .textFieldStyle(.roundedBorder)
+
+                    SecureField("Account 2 Gemini API Key (optional)", text: $settings.geminiAccount2ApiKey)
+                        .textFieldStyle(.roundedBorder)
+                }
+            }
+
+            Section("Claude Account") {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Anthropic Claude Code Account:")
+                        .font(.caption)
+                    Text(tracker.claudeCloudUsage?.emailAddress.isEmpty == false ? tracker.claudeCloudUsage!.emailAddress : "Auto-synced via Keychain (vijendra9753@gmail.com)")
+                        .font(.subheadline)
+                        .bold()
+                    Text("Live 5-hour and 7-day quotas fetched directly from Anthropic OAuth API.")
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary)
+                }
+            }
         }
     }
 
@@ -208,7 +253,7 @@ public struct SettingsView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
 
-            Text("Real-time token usage, caching efficiency, and cost tracker for Claude and Gemini Antigravity.")
+            Text("Real-time token usage, caching efficiency, and cloud-synced quota tracker for Claude and Gemini Antigravity.")
                 .font(.subheadline)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)

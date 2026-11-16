@@ -40,6 +40,7 @@ public struct ProviderCardView: View {
     public let summary: ProviderUsageSummary
     public let isGemini: Bool
     @ObservedObject var tracker = UsageTracker.shared
+    @ObservedObject var settings = AppSettings.shared
 
     private var accentGradient: LinearGradient {
         if isGemini {
@@ -78,7 +79,7 @@ public struct ProviderCardView: View {
                                 .fill(Color.green)
                                 .frame(width: 6, height: 6)
                         }
-                        Text(isGemini ? "Google Antigravity Cloud" : "Anthropic Cloud")
+                        Text(isGemini ? "Google Antigravity Cloud" : "Anthropic Cloud (vijendra9753@gmail.com)")
                             .font(.system(size: 9))
                             .foregroundColor(.secondary)
                     }
@@ -95,6 +96,17 @@ public struct ProviderCardView: View {
                         .font(.system(size: 8))
                         .foregroundColor(.secondary)
                 }
+            }
+
+            // MARK: - Gemini Account Switcher (if Gemini)
+            if isGemini {
+                HStack(spacing: 4) {
+                    accountButton(email: settings.geminiAccount1Email, label: "alexasolosix")
+                    accountButton(email: settings.geminiAccount2Email, label: "parasgandre")
+                }
+                .padding(2)
+                .background(Color.primary.opacity(0.06))
+                .cornerRadius(7)
             }
 
             // MARK: - Live Cloud Quota (Synced Across All Servers)
@@ -115,8 +127,26 @@ public struct ProviderCardView: View {
 
                 if isGemini {
                     let agy = tracker.antigravityCloudUsage
-                    let fiveHourRem = agy != nil ? agy!.geminiFiveHourRemaining : summary.quota.quotaRemainingPercent
-                    let weeklyRem = agy != nil ? agy!.geminiWeeklyRemaining : 0.79
+                    let selectedEmail = settings.selectedGeminiAccountTab
+                    let accountData = agy?.accounts.first(where: { $0.email == selectedEmail })
+
+                    let fiveHourRem = accountData?.fiveHourRemaining ?? (agy?.geminiFiveHourRemaining ?? 0.97)
+                    let weeklyRem = accountData?.weeklyRemaining ?? (agy?.geminiWeeklyRemaining ?? 0.79)
+                    let fiveHourCountdown = accountData?.fiveHourResetCountdown ?? (agy?.fiveHourResetCountdown ?? "4h 39m")
+                    let weeklyCountdown = accountData?.weeklyResetCountdown ?? (agy?.weeklyResetCountdown ?? "4d 8h")
+
+                    // Display Account Indicator
+                    HStack {
+                        Image(systemName: "person.crop.circle.fill")
+                            .font(.system(size: 10))
+                            .foregroundColor(.blue)
+                        Text(selectedEmail)
+                            .font(.system(size: 10, weight: .bold))
+                        Spacer()
+                        Text("Active Quota")
+                            .font(.system(size: 9))
+                            .foregroundColor(.secondary)
+                    }
 
                     // 1. Five Hour Limit
                     VStack(alignment: .leading, spacing: 2) {
@@ -127,7 +157,7 @@ public struct ProviderCardView: View {
                             Text("\(Int(fiveHourRem * 100))% remaining")
                                 .font(.system(size: 10, weight: .bold, design: .rounded))
                                 .foregroundColor(.green)
-                            Text("(\(agy?.fiveHourResetCountdown ?? "4h 39m"))")
+                            Text("(\(fiveHourCountdown))")
                                 .font(.system(size: 9))
                                 .foregroundColor(.secondary)
                         }
@@ -143,7 +173,7 @@ public struct ProviderCardView: View {
                             Text("\(Int(weeklyRem * 100))% remaining")
                                 .font(.system(size: 10, weight: .bold, design: .rounded))
                                 .foregroundColor(weeklyRem < 0.2 ? .red : .blue)
-                            Text("(\(agy?.weeklyResetCountdown ?? "4d 8h"))")
+                            Text("(\(weeklyCountdown))")
                                 .font(.system(size: 9))
                                 .foregroundColor(.secondary)
                         }
@@ -281,6 +311,26 @@ public struct ProviderCardView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(primaryColor.opacity(0.2), lineWidth: 1)
         )
+    }
+
+    private func accountButton(email: String, label: String) -> some View {
+        let isSelected = settings.selectedGeminiAccountTab == email
+        return Button(action: {
+            settings.selectedGeminiAccountTab = email
+        }) {
+            HStack(spacing: 4) {
+                Circle()
+                    .fill(isSelected ? Color.blue : Color.secondary.opacity(0.4))
+                    .frame(width: 5, height: 5)
+                Text(label)
+                    .font(.system(size: 10, weight: isSelected ? .bold : .medium))
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(isSelected ? Color(nsColor: .controlBackgroundColor) : Color.clear)
+            .cornerRadius(5)
+        }
+        .buttonStyle(.plain)
     }
 
     private func quotaBar(fraction: Double, color: Color) -> some View {

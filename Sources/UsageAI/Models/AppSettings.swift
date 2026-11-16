@@ -26,6 +26,23 @@ public class AppSettings: ObservableObject {
         didSet { defaults.set(dailyTokenBudget, forKey: "dailyTokenBudget") }
     }
 
+    // Gemini Accounts
+    @Published public var geminiAccount1Email: String {
+        didSet { defaults.set(geminiAccount1Email, forKey: "geminiAccount1Email") }
+    }
+
+    @Published public var geminiAccount2Email: String {
+        didSet { defaults.set(geminiAccount2Email, forKey: "geminiAccount2Email") }
+    }
+
+    @Published public var geminiAccount2ApiKey: String {
+        didSet { defaults.set(geminiAccount2ApiKey, forKey: "geminiAccount2ApiKey") }
+    }
+
+    @Published public var selectedGeminiAccountTab: String {
+        didSet { defaults.set(selectedGeminiAccountTab, forKey: "selectedGeminiAccountTab") }
+    }
+
     @Published public var customAntigravityPath: String {
         didSet { defaults.set(customAntigravityPath, forKey: "customAntigravityPath") }
     }
@@ -66,11 +83,16 @@ public class AppSettings: ObservableObject {
            let mode = MenuBarDisplayMode(rawValue: rawMode) {
             self.menuBarDisplayMode = mode
         } else {
-            self.menuBarDisplayMode = .bothTokens
+            self.menuBarDisplayMode = .cloudQuota
         }
 
         let savedBudget = defaults.integer(forKey: "dailyTokenBudget")
         self.dailyTokenBudget = savedBudget > 0 ? savedBudget : 1_000_000
+
+        self.geminiAccount1Email = defaults.string(forKey: "geminiAccount1Email") ?? "alexasolosix@gmail.com"
+        self.geminiAccount2Email = defaults.string(forKey: "geminiAccount2Email") ?? "parasgandre@gmail.com"
+        self.geminiAccount2ApiKey = defaults.string(forKey: "geminiAccount2ApiKey") ?? ""
+        self.selectedGeminiAccountTab = defaults.string(forKey: "selectedGeminiAccountTab") ?? "alexasolosix@gmail.com"
 
         self.customAntigravityPath = defaults.string(forKey: "customAntigravityPath") ?? ""
         self.customClaudePath = defaults.string(forKey: "customClaudePath") ?? ""
