@@ -73,7 +73,7 @@ public struct ProviderCardView: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text(summary.provider.displayName)
                             .font(.system(size: 13, weight: .semibold))
-                        Text(summary.lastActivityDate != nil ? "Active today" : "No recent logs")
+                        Text(summary.latestModel.isEmpty ? "Active Model" : cleanModelName(summary.latestModel))
                             .font(.system(size: 9))
                             .foregroundColor(.secondary)
                     }
@@ -92,10 +92,94 @@ public struct ProviderCardView: View {
                 }
             }
 
-            // Quick Stats Row
+            // MARK: - CLI /quota Section
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Label("CLI /quota & Context", systemImage: "gauge.with.needle")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("Resets in \(summary.quota.timeUntilResetString)")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+
+                // 1. Active Context Window Gauge (Latest Turn / Session)
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack {
+                        Text("Context Window:")
+                            .font(.system(size: 10, weight: .medium))
+                        Spacer()
+                        Text("\(tracker.formatTokens(summary.quota.contextTokensCurrentSession)) / \(tracker.formatTokens(summary.quota.contextWindowLimit)) (\(String(format: "%.1f%%", summary.quota.contextPercent * 100)))")
+                            .font(.system(size: 10, weight: .semibold, design: .rounded))
+                            .foregroundColor(summary.quota.contextPercent > 0.8 ? .red : .primary)
+                    }
+
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(Color.primary.opacity(0.08))
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(
+                                    summary.quota.contextPercent > 0.8 ? Color.red : primaryColor
+                                )
+                                .frame(width: max(geo.size.width * CGFloat(min(summary.quota.contextPercent, 1.0)), 2))
+                        }
+                    }
+                    .frame(height: 5)
+                }
+
+                // 2. Daily Token Quota Gauge
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack {
+                        Text("Daily Quota Remaining:")
+                            .font(.system(size: 10, weight: .medium))
+                        Spacer()
+                        Text("\(String(format: "%.1f%%", summary.quota.quotaRemainingPercent * 100)) remaining")
+                            .font(.system(size: 10, weight: .semibold, design: .rounded))
+                            .foregroundColor(.green)
+                    }
+
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(Color.primary.opacity(0.08))
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(LinearGradient(colors: [.green, .mint], startPoint: .leading, endPoint: .trailing))
+                                .frame(width: max(geo.size.width * CGFloat(min(summary.quota.quotaRemainingPercent, 1.0)), 2))
+                        }
+                    }
+                    .frame(height: 5)
+                }
+
+                // Requests & Limits Pill Row
+                HStack(spacing: 8) {
+                    HStack(spacing: 3) {
+                        Image(systemName: "arrow.triangle.swap")
+                            .font(.system(size: 8))
+                            .foregroundColor(.secondary)
+                        Text("Requests: \(summary.quota.dailyRequestsUsed) / \(summary.quota.dailyRequestsLimit)")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Text(summary.quota.tierName)
+                        .font(.system(size: 8, weight: .bold))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(primaryColor.opacity(0.12))
+                        .foregroundColor(primaryColor)
+                        .cornerRadius(3)
+                }
+            }
+            .padding(8)
+            .background(Color.primary.opacity(0.03))
+            .cornerRadius(8)
+
+            // MARK: - CLI /usage Section
             HStack(spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("TODAY")
+                    Text("TODAY'S TOKENS")
                         .font(.system(size: 9, weight: .semibold))
                         .foregroundColor(.secondary)
                     Text(tracker.formatTokens(summary.todayTokens))
@@ -119,7 +203,7 @@ public struct ProviderCardView: View {
                 Divider().frame(height: 28)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("CACHE EFFICIENCY")
+                    Text("CACHE SAVINGS")
                         .font(.system(size: 9, weight: .semibold))
                         .foregroundColor(.secondary)
                     Text("\(Int(summary.cacheHitRatio * 100))%")
@@ -128,26 +212,26 @@ public struct ProviderCardView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, 2)
 
             // Token Details breakdown
             HStack(spacing: 6) {
                 StatPillView(
                     title: "In",
-                    value: tracker.formatTokens(summary.inputTokens),
+                    value: tracker.formatTokens(summary.todayInputTokens),
                     icon: "arrow.down.right",
                     tintColor: primaryColor
                 )
                 StatPillView(
                     title: "Out",
-                    value: tracker.formatTokens(summary.outputTokens),
+                    value: tracker.formatTokens(summary.todayOutputTokens),
                     icon: "arrow.up.left",
                     tintColor: .purple
                 )
                 if summary.cacheReadTokens > 0 {
                     StatPillView(
                         title: "Cached",
-                        value: tracker.formatTokens(summary.cacheReadTokens),
+                        value: tracker.formatTokens(summary.todayCachedTokens),
                         icon: "bolt.fill",
                         tintColor: .green
                     )

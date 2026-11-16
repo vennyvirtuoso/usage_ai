@@ -68,6 +68,27 @@ struct RunTests {
         assert(cCost1 > 0.03 && cCost1 < 0.04, "Claude pricing outside expected range: \(cCost1)")
         print("  ✅ Pricing calculations validated successfully.")
 
+        // 4. Test Model Specs & Context Window
+        print("➡️ Testing ModelSpecs & Quota calculations...")
+        let geminiCtx = ModelSpecs.contextWindow(for: "gemini-3.8-flash-medium", provider: .geminiAntigravity)
+        assert(geminiCtx == 1_048_576, "Expected 1M context window for Gemini Flash, got \(geminiCtx)")
+
+        let geminiProCtx = ModelSpecs.contextWindow(for: "gemini-1.5-pro", provider: .geminiAntigravity)
+        assert(geminiProCtx == 2_097_152, "Expected 2M context window for Gemini Pro, got \(geminiProCtx)")
+
+        let claudeCtx = ModelSpecs.contextWindow(for: "claude-3-5-sonnet", provider: .claude)
+        assert(claudeCtx == 200_000, "Expected 200k context window for Claude Sonnet, got \(claudeCtx)")
+
+        var quota = QuotaInfo()
+        quota.contextTokensCurrentSession = 20_000
+        quota.contextWindowLimit = 200_000
+        assert(abs(quota.contextPercent - 0.10) < 0.001, "Expected 10% context percent")
+
+        quota.dailyTokensUsed = 1_000_000
+        quota.dailyTokensLimit = 4_000_000
+        assert(abs(quota.quotaRemainingPercent - 0.75) < 0.001, "Expected 75% quota remaining")
+        print("  ✅ Context window and quota metrics validated successfully.")
+
         // Cleanup
         try? fileManager.removeItem(at: tempDir)
         print("\n🎉 ALL USAGE AI TESTS PASSED PERFECTLY!\n")

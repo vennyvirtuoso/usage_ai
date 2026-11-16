@@ -20,6 +20,11 @@
   - **Gemini / Antigravity**: Automatically scans local session transcripts (`~/.gemini/antigravity/brain/`) for prompt tokens, completion tokens, cached tokens, and active models.
   - **Claude (Anthropic)**: Automatically parses Claude Code sessions (`~/.claude/projects/`, `~/.claude/sessions/`) for input, output, cache-read, and cache-creation tokens.
 
+- **CLI `/quota` & `/usage` Metrics**:
+  - **Active Context Window**: Tracks real-time context token load in the active session against the model's window limit (e.g. `15.5k / 1.0M tokens (1.5%)` for Gemini, `24k / 200k tokens (12%)` for Claude).
+  - **Daily Quota & Rate Limits**: Shows % daily quota remaining, requests used today vs tier limits (e.g. `1,500 RPD`), and exact countdown until quota resets (`⏱ Resets in Xh Ym at 00:00 UTC`).
+  - **Exact Session vs Daily Breakdown**: Matches the exact stats of Claude Code's `/usage` & `/cost` and Antigravity's `/quota`.
+
 - **Cost & Cache Optimization**:
   - Live cost estimations calculated per model (e.g. Gemini 3.8 Flash, 2.0 Flash, 1.5 Pro, Claude 3.5 Sonnet, Claude 3 Opus, Haiku).
   - Cache hit ratio metrics so you know how much context caching saves you.

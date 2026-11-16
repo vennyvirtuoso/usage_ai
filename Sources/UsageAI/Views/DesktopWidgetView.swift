@@ -203,9 +203,14 @@ public struct DesktopWidgetView: View {
                     }
                     Text(tracker.formatTokens(tracker.geminiSummary.todayTokens))
                         .font(.system(size: 16, weight: .heavy, design: .rounded))
-                    Text("All-time: \(tracker.formatTokens(tracker.geminiSummary.totalTokens))")
-                        .font(.system(size: 9))
+
+                    // Context window & Quota
+                    Text("Ctx: \(tracker.formatTokens(tracker.geminiSummary.quota.contextTokensCurrentSession)) (\(String(format: "%.1f%%", tracker.geminiSummary.quota.contextPercent * 100)))")
+                        .font(.system(size: 9, weight: .medium))
                         .foregroundColor(.secondary)
+                    Text("Quota: \(Int(tracker.geminiSummary.quota.quotaRemainingPercent * 100))% left")
+                        .font(.system(size: 8, weight: .semibold))
+                        .foregroundColor(.green)
                 }
                 .padding(8)
                 .background(Color.blue.opacity(0.1))
@@ -223,9 +228,14 @@ public struct DesktopWidgetView: View {
                     }
                     Text(tracker.formatTokens(tracker.claudeSummary.todayTokens))
                         .font(.system(size: 16, weight: .heavy, design: .rounded))
-                    Text("All-time: \(tracker.formatTokens(tracker.claudeSummary.totalTokens))")
-                        .font(.system(size: 9))
+
+                    // Context window & Quota
+                    Text("Ctx: \(tracker.formatTokens(tracker.claudeSummary.quota.contextTokensCurrentSession)) (\(String(format: "%.1f%%", tracker.claudeSummary.quota.contextPercent * 100)))")
+                        .font(.system(size: 9, weight: .medium))
                         .foregroundColor(.secondary)
+                    Text("Quota: \(Int(tracker.claudeSummary.quota.quotaRemainingPercent * 100))% left")
+                        .font(.system(size: 8, weight: .semibold))
+                        .foregroundColor(.green)
                 }
                 .padding(8)
                 .background(Color.orange.opacity(0.1))

@@ -146,7 +146,7 @@ public struct MenuBarPopupView: View {
                 }
                 .padding(16)
             }
-            .frame(maxHeight: 460)
+            .frame(maxHeight: 520)
 
             Divider()
 
@@ -167,6 +167,6 @@ public struct MenuBarPopupView: View {
             .padding(.vertical, 10)
             .background(Color(nsColor: .windowBackgroundColor).opacity(0.5))
         }
-        .frame(width: 380)
+        .frame(width: 400)
     }
 }
