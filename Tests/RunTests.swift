@@ -89,6 +89,34 @@ struct RunTests {
         assert(abs(quota.quotaRemainingPercent - 0.75) < 0.001, "Expected 75% quota remaining")
         print("  ✅ Context window and quota metrics validated successfully.")
 
+        // 5. Test Antigravity Live Cloud Parser
+        print("➡️ Testing AntigravityLiveService cloud parsing...")
+        let sampleAgyJson = """
+        {
+          "status": "SUCCESS",
+          "command": {
+            "name": "usage",
+            "data": {
+              "groups": [
+                {
+                  "name": "Gemini Models",
+                  "buckets": [
+                    { "id": "gemini-weekly", "remaining_fraction": 0.7897, "reset_time": "2026-11-21T07:37:46Z", "description": "Weekly limit" },
+                    { "id": "gemini-5h", "remaining_fraction": 0.9676, "reset_time": "2026-11-17T03:19:02Z", "description": "5h limit" }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+        """.data(using: .utf8)!
+
+        let parsedAgy = AntigravityLiveService.shared.parseAgyOutput(data: sampleAgyJson)
+        assert(parsedAgy != nil, "Expected parsed Antigravity cloud usage")
+        assert(parsedAgy?.geminiWeeklyPercent == 79, "Expected 79% weekly, got \(parsedAgy?.geminiWeeklyPercent ?? -1)")
+        assert(parsedAgy?.geminiFiveHourPercent == 97, "Expected 97% 5h, got \(parsedAgy?.geminiFiveHourPercent ?? -1)")
+        print("  ✅ Antigravity live cloud quota parser verified (79% weekly, 97% 5-hour).")
+
         // Cleanup
         try? fileManager.removeItem(at: tempDir)
         print("\n🎉 ALL USAGE AI TESTS PASSED PERFECTLY!\n")

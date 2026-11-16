@@ -2,6 +2,7 @@ import Foundation
 import Combine
 
 public enum MenuBarDisplayMode: String, CaseIterable, Codable {
+    case cloudQuota = "Cloud Quotas (✨ 97% | 🤖 93%)"
     case bothTokens = "Both Tokens (✨ 12k | 🤖 45k)"
     case totalTokens = "Total Combined (⚡ 57k)"
     case withCost = "Total + Cost (⚡ 57k · $0.24)"

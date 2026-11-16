@@ -71,9 +71,14 @@ public struct ProviderCardView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 6))
 
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(summary.provider.displayName)
-                            .font(.system(size: 13, weight: .semibold))
-                        Text(summary.latestModel.isEmpty ? "Active Model" : cleanModelName(summary.latestModel))
+                        HStack(spacing: 4) {
+                            Text(summary.provider.displayName)
+                                .font(.system(size: 13, weight: .semibold))
+                            Circle()
+                                .fill(Color.green)
+                                .frame(width: 6, height: 6)
+                        }
+                        Text(isGemini ? "Google Antigravity Cloud" : "Anthropic Cloud")
                             .font(.system(size: 9))
                             .foregroundColor(.secondary)
                     }
@@ -92,89 +97,117 @@ public struct ProviderCardView: View {
                 }
             }
 
-            // MARK: - CLI /quota Section
-            VStack(alignment: .leading, spacing: 6) {
+            // MARK: - Live Cloud Quota (Synced Across All Servers)
+            VStack(alignment: .leading, spacing: 7) {
                 HStack {
-                    Label("CLI /quota & Context", systemImage: "gauge.with.needle")
-                        .font(.system(size: 9, weight: .bold))
+                    Label("CLOUD QUOTA (SYNCED ACROSS ALL SERVERS)", systemImage: "network")
+                        .font(.system(size: 8, weight: .heavy))
                         .foregroundColor(.secondary)
                     Spacer()
-                    Text("Resets in \(summary.quota.timeUntilResetString)")
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundColor(.secondary)
+                    Text("Live API")
+                        .font(.system(size: 8, weight: .bold))
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 1)
+                        .background(Color.green.opacity(0.15))
+                        .foregroundColor(.green)
+                        .cornerRadius(3)
                 }
 
-                // 1. Active Context Window Gauge (Latest Turn / Session)
+                if isGemini {
+                    let agy = tracker.antigravityCloudUsage
+                    let fiveHourRem = agy != nil ? agy!.geminiFiveHourRemaining : summary.quota.quotaRemainingPercent
+                    let weeklyRem = agy != nil ? agy!.geminiWeeklyRemaining : 0.79
+
+                    // 1. Five Hour Limit
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack {
+                            Text("5-Hour Window:")
+                                .font(.system(size: 10, weight: .medium))
+                            Spacer()
+                            Text("\(Int(fiveHourRem * 100))% remaining")
+                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                                .foregroundColor(.green)
+                            Text("(\(agy?.fiveHourResetCountdown ?? "4h 39m"))")
+                                .font(.system(size: 9))
+                                .foregroundColor(.secondary)
+                        }
+                        quotaBar(fraction: fiveHourRem, color: .green)
+                    }
+
+                    // 2. Weekly Limit
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack {
+                            Text("Weekly Quota:")
+                                .font(.system(size: 10, weight: .medium))
+                            Spacer()
+                            Text("\(Int(weeklyRem * 100))% remaining")
+                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                                .foregroundColor(weeklyRem < 0.2 ? .red : .blue)
+                            Text("(\(agy?.weeklyResetCountdown ?? "4d 8h"))")
+                                .font(.system(size: 9))
+                                .foregroundColor(.secondary)
+                        }
+                        quotaBar(fraction: weeklyRem, color: weeklyRem < 0.2 ? .red : .blue)
+                    }
+
+                } else {
+                    // Claude Cloud
+                    let claude = tracker.claudeCloudUsage
+                    let fiveHourRem = claude != nil ? (claude!.fiveHourRemaining / 100.0) : 0.93
+                    let weeklyRem = claude != nil ? (claude!.sevenDayRemaining / 100.0) : 0.83
+
+                    // 1. Five Hour Session Limit
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack {
+                            Text("5-Hour Window:")
+                                .font(.system(size: 10, weight: .medium))
+                            Spacer()
+                            Text("\(Int(fiveHourRem * 100))% remaining")
+                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                                .foregroundColor(.green)
+                            Text("(\(claude?.fiveHourResetCountdown ?? "3h 12m"))")
+                                .font(.system(size: 9))
+                                .foregroundColor(.secondary)
+                        }
+                        quotaBar(fraction: fiveHourRem, color: .green)
+                    }
+
+                    // 2. Weekly Limit
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack {
+                            Text("Weekly Quota:")
+                                .font(.system(size: 10, weight: .medium))
+                            Spacer()
+                            Text("\(Int(weeklyRem * 100))% remaining")
+                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                                .foregroundColor(.orange)
+                            Text("(\(claude?.sevenDayResetCountdown ?? "1d 15h"))")
+                                .font(.system(size: 9))
+                                .foregroundColor(.secondary)
+                        }
+                        quotaBar(fraction: weeklyRem, color: .orange)
+                    }
+                }
+            }
+            .padding(9)
+            .background(Color.primary.opacity(0.04))
+            .cornerRadius(8)
+
+            // MARK: - Active Session Context Window
+            if summary.quota.contextTokensCurrentSession > 0 {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack {
-                        Text("Context Window:")
+                        Text("Active Context Window:")
                             .font(.system(size: 10, weight: .medium))
                         Spacer()
                         Text("\(tracker.formatTokens(summary.quota.contextTokensCurrentSession)) / \(tracker.formatTokens(summary.quota.contextWindowLimit)) (\(String(format: "%.1f%%", summary.quota.contextPercent * 100)))")
                             .font(.system(size: 10, weight: .semibold, design: .rounded))
                             .foregroundColor(summary.quota.contextPercent > 0.8 ? .red : .primary)
                     }
-
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill(Color.primary.opacity(0.08))
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill(
-                                    summary.quota.contextPercent > 0.8 ? Color.red : primaryColor
-                                )
-                                .frame(width: max(geo.size.width * CGFloat(min(summary.quota.contextPercent, 1.0)), 2))
-                        }
-                    }
-                    .frame(height: 5)
+                    quotaBar(fraction: summary.quota.contextPercent, color: summary.quota.contextPercent > 0.8 ? .red : primaryColor)
                 }
-
-                // 2. Daily Token Quota Gauge
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack {
-                        Text("Daily Quota Remaining:")
-                            .font(.system(size: 10, weight: .medium))
-                        Spacer()
-                        Text("\(String(format: "%.1f%%", summary.quota.quotaRemainingPercent * 100)) remaining")
-                            .font(.system(size: 10, weight: .semibold, design: .rounded))
-                            .foregroundColor(.green)
-                    }
-
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill(Color.primary.opacity(0.08))
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill(LinearGradient(colors: [.green, .mint], startPoint: .leading, endPoint: .trailing))
-                                .frame(width: max(geo.size.width * CGFloat(min(summary.quota.quotaRemainingPercent, 1.0)), 2))
-                        }
-                    }
-                    .frame(height: 5)
-                }
-
-                // Requests & Limits Pill Row
-                HStack(spacing: 8) {
-                    HStack(spacing: 3) {
-                        Image(systemName: "arrow.triangle.swap")
-                            .font(.system(size: 8))
-                            .foregroundColor(.secondary)
-                        Text("Requests: \(summary.quota.dailyRequestsUsed) / \(summary.quota.dailyRequestsLimit)")
-                            .font(.system(size: 9, weight: .medium))
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    Text(summary.quota.tierName)
-                        .font(.system(size: 8, weight: .bold))
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 1)
-                        .background(primaryColor.opacity(0.12))
-                        .foregroundColor(primaryColor)
-                        .cornerRadius(3)
-                }
+                .padding(.horizontal, 2)
             }
-            .padding(8)
-            .background(Color.primary.opacity(0.03))
-            .cornerRadius(8)
 
             // MARK: - CLI /usage Section
             HStack(spacing: 8) {
@@ -237,22 +270,6 @@ public struct ProviderCardView: View {
                     )
                 }
             }
-
-            // Top Models Badge Row
-            if !summary.modelCounts.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 4) {
-                        ForEach(summary.modelCounts.sorted(by: { $0.value > $1.value }).prefix(3), id: \.key) { model, count in
-                            Text("\(cleanModelName(model)): \(tracker.formatTokens(count))")
-                                .font(.system(size: 9, weight: .medium))
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.primary.opacity(0.06))
-                                .cornerRadius(4)
-                        }
-                    }
-                }
-            }
         }
         .padding(12)
         .background(
@@ -264,6 +281,19 @@ public struct ProviderCardView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(primaryColor.opacity(0.2), lineWidth: 1)
         )
+    }
+
+    private func quotaBar(fraction: Double, color: Color) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(Color.primary.opacity(0.08))
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(color)
+                    .frame(width: max(geo.size.width * CGFloat(min(max(fraction, 0.0), 1.0)), 2))
+            }
+        }
+        .frame(height: 5)
     }
 
     private func cleanModelName(_ name: String) -> String {

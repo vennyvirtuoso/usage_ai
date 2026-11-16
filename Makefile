@@ -16,6 +16,8 @@ test:
 		Sources/UsageAI/Services/PricingCalculator.swift \
 		Sources/UsageAI/Services/AntigravityScanner.swift \
 		Sources/UsageAI/Services/ClaudeScanner.swift \
+		Sources/UsageAI/Services/AntigravityLiveService.swift \
+		Sources/UsageAI/Services/ClaudeLiveService.swift \
 		Tests/RunTests.swift \
 		-o /tmp/run_tests && /tmp/run_tests
 

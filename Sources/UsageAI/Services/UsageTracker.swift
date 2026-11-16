@@ -9,6 +9,9 @@ public class UsageTracker: ObservableObject {
     @Published public var geminiSummary = ProviderUsageSummary(provider: .geminiAntigravity)
     @Published public var claudeSummary = ProviderUsageSummary(provider: .claude)
 
+    @Published public var claudeCloudUsage: ClaudeCloudUsage? = nil
+    @Published public var antigravityCloudUsage: AntigravityCloudUsage? = nil
+
     @Published public var allRecords: [TokenRecord] = []
     @Published public var isScanning: Bool = false
     @Published public var lastRefreshedDate: Date? = nil
@@ -40,6 +43,10 @@ public class UsageTracker: ObservableObject {
     public var menuBarDisplayString: String {
         let settings = AppSettings.shared
         switch settings.menuBarDisplayMode {
+        case .cloudQuota:
+            let gPct = antigravityCloudUsage?.geminiFiveHourPercent ?? Int(geminiSummary.quota.quotaRemainingPercent * 100)
+            let cPct = claudeCloudUsage != nil ? Int(claudeCloudUsage!.fiveHourRemaining.rounded()) : Int(claudeSummary.quota.quotaRemainingPercent * 100)
+            return "✨ \(gPct)%  🤖 \(cPct)%"
         case .bothTokens:
             let gStr = formatTokens(geminiSummary.todayTokens)
             let cStr = formatTokens(claudeSummary.todayTokens)
@@ -84,27 +91,50 @@ public class UsageTracker: ObservableObject {
     public func refreshNow() {
         guard !isScanning else { return }
         isScanning = true
-        scanStatusMessage = "Scanning transcripts..."
+        scanStatusMessage = "Syncing cloud quotas & transcripts..."
 
         let settings = AppSettings.shared
         let customGemini = settings.customAntigravityPath
         let customClaude = settings.customClaudePath
 
         Task.detached(priority: .userInitiated) {
-            let antigravityRecords = AntigravityScanner.shared.scanLogs(customPath: customGemini)
-            let claudeRecords = ClaudeScanner.shared.scanLogs(customPath: customClaude)
+            async let agyQuotaTask = AntigravityLiveService.shared.fetchLiveQuota()
+            async let claudeQuotaTask = ClaudeLiveService.shared.fetchLiveUsage()
+            async let localAntigravityTask = AntigravityScanner.shared.scanLogs(customPath: customGemini)
+            async let localClaudeTask = ClaudeScanner.shared.scanLogs(customPath: customClaude)
+
+            let (agyQuota, claudeQuota, antigravityRecords, claudeRecords) = await (
+                agyQuotaTask,
+                claudeQuotaTask,
+                localAntigravityTask,
+                localClaudeTask
+            )
             let combined = antigravityRecords + claudeRecords
 
             await MainActor.run {
-                self.processRecords(antigravityRecords: antigravityRecords, claudeRecords: claudeRecords, all: combined)
+                self.antigravityCloudUsage = agyQuota
+                self.claudeCloudUsage = claudeQuota
+                self.processRecords(
+                    antigravityRecords: antigravityRecords,
+                    claudeRecords: claudeRecords,
+                    all: combined,
+                    agyCloud: agyQuota,
+                    claudeCloud: claudeQuota
+                )
                 self.isScanning = false
                 self.lastRefreshedDate = Date()
-                self.scanStatusMessage = "Updated at \(DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium))"
+                self.scanStatusMessage = "Cloud-synced at \(DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium))"
             }
         }
     }
 
-    private func processRecords(antigravityRecords: [TokenRecord], claudeRecords: [TokenRecord], all: [TokenRecord]) {
+    private func processRecords(
+        antigravityRecords: [TokenRecord],
+        claudeRecords: [TokenRecord],
+        all: [TokenRecord],
+        agyCloud: AntigravityCloudUsage?,
+        claudeCloud: ClaudeCloudUsage?
+    ) {
         self.allRecords = all.sorted(by: { $0.timestamp > $1.timestamp })
 
         var gemini = ProviderUsageSummary(provider: .geminiAntigravity)
@@ -150,6 +180,11 @@ public class UsageTracker: ObservableObject {
         gemini.quota.dailyRequestsUsed = geminiTodayCount
         gemini.quota.dailyTokensUsed = gemini.todayTokens
 
+        // If live cloud quota is available for Antigravity (synced across all servers)
+        if agyCloud != nil {
+            gemini.quota.tierName = "Antigravity Cloud (All Servers)"
+        }
+
         // Process Claude records
         var claudeTodayCount = 0
         for rec in claudeRecords {
@@ -186,6 +221,11 @@ public class UsageTracker: ObservableObject {
         }
         claude.quota.dailyRequestsUsed = claudeTodayCount
         claude.quota.dailyTokensUsed = claude.todayTokens
+
+        // If live cloud quota is available for Claude (synced across all servers)
+        if let cloud = claudeCloud {
+            claude.quota.tierName = "\(cloud.subscriptionType) (All Servers)"
+        }
 
         self.geminiSummary = gemini
         self.claudeSummary = claude

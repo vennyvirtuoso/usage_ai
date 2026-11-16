@@ -78,6 +78,10 @@ public class StatusItemController: NSObject {
         button.imagePosition = .imageLeading
 
         switch settings.menuBarDisplayMode {
+        case .cloudQuota:
+            let gPct = tracker.antigravityCloudUsage?.geminiFiveHourPercent ?? Int(tracker.geminiSummary.quota.quotaRemainingPercent * 100)
+            let cPct = tracker.claudeCloudUsage != nil ? Int(tracker.claudeCloudUsage!.fiveHourRemaining.rounded()) : Int(tracker.claudeSummary.quota.quotaRemainingPercent * 100)
+            button.title = " ✨ \(gPct)%  🤖 \(cPct)%"
         case .bothTokens:
             let gStr = tracker.formatTokens(tracker.geminiSummary.todayTokens)
             let cStr = tracker.formatTokens(tracker.claudeSummary.todayTokens)
