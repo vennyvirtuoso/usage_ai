@@ -18,16 +18,16 @@ public class ClaudeScanner {
     public init() {}
 
     public func discoverClaudeDirectories(customPath: String? = nil) -> [URL] {
-        var directories: [URL] = []
         let fileManager = FileManager.default
 
         if let custom = customPath, !custom.isEmpty {
             let customURL = URL(fileURLWithPath: (custom as NSString).expandingTildeInPath)
             if fileManager.fileExists(atPath: customURL.path) {
-                directories.append(customURL)
+                return [customURL]
             }
         }
 
+        var directories: [URL] = []
         let home = fileManager.homeDirectoryForCurrentUser
         let defaultClaude = home.appendingPathComponent(".claude")
         if fileManager.fileExists(atPath: defaultClaude.path) {
