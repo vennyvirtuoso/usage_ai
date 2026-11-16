@@ -12,6 +12,12 @@ public enum WidgetSizeStyle: String, CaseIterable, Codable {
     case small = "Small Widget (Compact)"
 }
 
+public enum WidgetTheme: String, CaseIterable, Codable {
+    case obsidian = "Deep Obsidian (Best on All Wallpapers)"
+    case frosted = "Adaptive Frosted Glass"
+    case titanium = "Titanium Dark"
+}
+
 public class AppSettings: ObservableObject {
     public static let shared = AppSettings()
 
@@ -28,6 +34,10 @@ public class AppSettings: ObservableObject {
 
     @Published public var widgetSizeStyle: WidgetSizeStyle {
         didSet { defaults.set(widgetSizeStyle.rawValue, forKey: "widgetSizeStyle") }
+    }
+
+    @Published public var widgetTheme: WidgetTheme {
+        didSet { defaults.set(widgetTheme.rawValue, forKey: "widgetTheme") }
     }
 
     // Gemini Accounts
@@ -62,7 +72,6 @@ public class AppSettings: ObservableObject {
 
     private init() {
         let savedInterval = defaults.double(forKey: "refreshIntervalSeconds")
-        // Default to 20 minutes (1200 seconds)
         self.refreshIntervalSeconds = savedInterval >= 300.0 ? savedInterval : 1200.0
 
         if let rawMode = defaults.string(forKey: "menuBarDisplayMode"),
@@ -77,6 +86,13 @@ public class AppSettings: ObservableObject {
             self.widgetSizeStyle = size
         } else {
             self.widgetSizeStyle = .medium
+        }
+
+        if let rawTheme = defaults.string(forKey: "widgetTheme"),
+           let theme = WidgetTheme(rawValue: rawTheme) {
+            self.widgetTheme = theme
+        } else {
+            self.widgetTheme = .obsidian
         }
 
         self.geminiAccount1Email = defaults.string(forKey: "geminiAccount1Email") ?? "alexasolosix@gmail.com"
