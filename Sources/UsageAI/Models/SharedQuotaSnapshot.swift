@@ -33,22 +33,31 @@ public struct SharedQuotaSnapshot: Codable {
         self.updatedAt = updatedAt
     }
 
-    public static var storageURL: URL {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let dir = appSupport.appendingPathComponent("UsageAI", isDirectory: true)
-        if !FileManager.default.fileExists(atPath: dir.path) {
-            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        }
-        return dir.appendingPathComponent("quota_snapshot.json")
-    }
-
     public static func load() -> SharedQuotaSnapshot? {
-        guard let data = try? Data(contentsOf: storageURL) else { return nil }
+        guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+        let url = appSupport.appendingPathComponent("UsageAI/quota_snapshot.json")
+        guard let data = try? Data(contentsOf: url) else { return nil }
         return try? JSONDecoder().decode(SharedQuotaSnapshot.self, from: data)
     }
 
     public func save() {
         guard let data = try? JSONEncoder().encode(self) else { return }
-        try? data.write(to: Self.storageURL, options: .atomic)
+
+        // 1. Write to main app support directory
+        if let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
+            let dir = appSupport.appendingPathComponent("UsageAI", isDirectory: true)
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            let fileURL = dir.appendingPathComponent("quota_snapshot.json")
+            try? data.write(to: fileURL, options: .atomic)
+        }
+
+        // 2. Also write directly to widget container directory so the sandboxed widget has it ready
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let widgetDir = home.appendingPathComponent("Library/Containers/com.usageai.mac.widget/Data/Library/Application Support/UsageAI", isDirectory: true)
+        try? FileManager.default.createDirectory(at: widgetDir, withIntermediateDirectories: true)
+        let widgetFileURL = widgetDir.appendingPathComponent("quota_snapshot.json")
+        try? data.write(to: widgetFileURL, options: .atomic)
     }
 }

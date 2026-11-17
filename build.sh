@@ -53,7 +53,13 @@ cp Resources/Widget-Info.plist "${WIDGET_CONTENTS}/Info.plist"
 
 # 3. Codesign Widget Extension and App
 echo "🔏 Code signing extension and application bundle..."
-codesign -s - -f "${WIDGET_APPEX}" 2>/dev/null || true
-codesign -s - -f "${APP_DIR}" 2>/dev/null || true
+SIGN_ID="Apple Development: arunshakti80@gmail.com (66L54RP9BF)"
+if security find-identity -v -p codesigning | grep -q "${SIGN_ID}"; then
+    codesign -s "${SIGN_ID}" -f --entitlements Resources/Widget.entitlements "${WIDGET_APPEX}"
+    codesign -s "${SIGN_ID}" -f --entitlements Resources/App.entitlements "${APP_DIR}"
+else
+    codesign -s - -f --entitlements Resources/Widget.entitlements "${WIDGET_APPEX}"
+    codesign -s - -f "${APP_DIR}"
+fi
 
 echo "✅ Successfully built: ${APP_DIR} with Notification Center WidgetKit extension!"

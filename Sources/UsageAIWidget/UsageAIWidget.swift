@@ -32,7 +32,11 @@ public struct QuotaProvider: TimelineProvider {
     }
 
     public func getSnapshot(in context: Context, completion: @escaping (QuotaTimelineEntry) -> Void) {
-        completion(fetchCurrentEntry())
+        if context.isPreview {
+            completion(placeholder(in: context))
+        } else {
+            completion(fetchCurrentEntry())
+        }
     }
 
     public func getTimeline(in context: Context, completion: @escaping (Timeline<QuotaTimelineEntry>) -> Void) {
@@ -294,6 +298,14 @@ public struct UsageAIWidgetEntryView: View {
 }
 
 @main
+public struct UsageAIWidgetBundle: WidgetBundle {
+    public init() {}
+
+    public var body: some Widget {
+        UsageAIWidget()
+    }
+}
+
 public struct UsageAIWidget: Widget {
     public let kind: String = "UsageAIWidget"
 
