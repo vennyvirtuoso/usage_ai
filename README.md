@@ -37,12 +37,6 @@
                                     (_/   \_)
 ```
 
-> **Why "Ghee-Khatam"?**  
-> In Indian homes, the oil lamp (*diya*) or kitchen tin running out of *ghee* is an immediate domestic crisis. In modern software engineering, it's that soul-crushing moment when **Claude Code** or **Google Gemini** locks you out with:  
-> `Rate limit reached. Quota resets in 4 hours 32 minutes.`  
->
-> **Ghee-Khatam** keeps a watchful eye on your AI tanks before the fire goes out.
-
 ---
 
 ## 💡 What is Ghee-Khatam?
