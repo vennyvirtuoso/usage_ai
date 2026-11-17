@@ -9,42 +9,17 @@
   <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT License">
 </p>
 
+<p align="center">
+  <img src="assets/widget-preview.png" alt="Ghee-Khatam Desktop Widget & Menu Bar on macOS" width="850" style="border-radius: 12px; max-width: 100%;">
+</p>
+
 ---
 
 ## 🖥️ Live UI Preview
 
-```text
-   File  Edit  View  Window  Help                [ ✦ 97% · 100% ]   Tue 9:41 AM
-                                                    └──────┬──────┘
-                                                           ▼
-╭─────────────────────────────────────────────────────────────────────────────╮
-│  📈 Ghee-Khatam                  ● Synced to Cloud             ↻      ⚙     │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  🪟 Desktop Widget Active        Pinned to desktop screen         [Hide]    │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  ✨ Google Gemini / Antigravity                             ● Live API      │
-│     Synced across all cloud servers & remote instances                      │
-│     ACCOUNT: [ ● Work (user1@gmail.com) ]  [ Personal ]                     │
-│                                                                             │
-│     5-Hour Rolling Limit Remaining:               97%   (resets in 4h 39m)  │
-│     [██████████████████████████████████████░]                               │
-│                                                                             │
-│     Weekly Plan Limit Remaining:                  79%   (resets in 4d 8h)   │
-│     [███████████████████████████████░░░░░░░░]                               │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  🤖 Claude Code (Anthropic)                                 ● Live API      │
-│     Direct macOS Keychain OAuth Session Sync                                │
-│                                                                             │
-│     5-Hour Rolling Limit Remaining:              100%   (Ready)             │
-│     [████████████████████████████████████████]                              │
-│                                                                             │
-│     Weekly Limit Remaining:                       83%   (resets in 1d 15h)  │
-│     [█████████████████████████████████░░░░░░]                               │
-│     ↳ Active: Claude Code (99% utilization share)                           │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  ⏱️ Refreshes automatically every 20m                      [Quit Ghee-Khatam]│
-╰─────────────────────────────────────────────────────────────────────────────╯
-```
+<p align="center">
+  <img src="assets/menubar-preview.png" alt="Ghee-Khatam Menu Bar Popover Dashboard" width="460" style="border-radius: 12px; max-width: 100%;">
+</p>
 
 ### 🧩 Native macOS Notification Center & Desktop Widgets
 
