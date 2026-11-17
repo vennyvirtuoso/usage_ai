@@ -25,6 +25,9 @@ public struct SharedQuotaSnapshot: Codable {
     public var account2FiveHourCountdown: String
     public var account2WeeklyCountdown: String
 
+    public var hasClaude: Bool
+    public var hasGemini: Bool
+
     public init(
         geminiFiveHourPercent: Int,
         geminiWeeklyPercent: Int,
@@ -45,7 +48,9 @@ public struct SharedQuotaSnapshot: Codable {
         account2FiveHour: Int = 100,
         account2Weekly: Int = 100,
         account2FiveHourCountdown: String = "Ready",
-        account2WeeklyCountdown: String = "7d limit"
+        account2WeeklyCountdown: String = "7d limit",
+        hasClaude: Bool = true,
+        hasGemini: Bool = true
     ) {
         self.geminiFiveHourPercent = geminiFiveHourPercent
         self.geminiWeeklyPercent = geminiWeeklyPercent
@@ -56,6 +61,8 @@ public struct SharedQuotaSnapshot: Codable {
         self.claudeFiveHourCountdown = claudeFiveHourCountdown
         self.claudeWeeklyCountdown = claudeWeeklyCountdown
         self.updatedAt = updatedAt
+        self.hasClaude = hasClaude
+        self.hasGemini = hasGemini
 
         self.selectedGeminiAccount = selectedGeminiAccount
         self.account1Name = account1Name
@@ -78,6 +85,7 @@ public struct SharedQuotaSnapshot: Codable {
         case selectedGeminiAccount
         case account1Name, account1FiveHour, account1Weekly, account1FiveHourCountdown, account1WeeklyCountdown
         case account2Name, account2FiveHour, account2Weekly, account2FiveHourCountdown, account2WeeklyCountdown
+        case hasClaude, hasGemini
     }
 
     public init(from decoder: Decoder) throws {
@@ -91,6 +99,9 @@ public struct SharedQuotaSnapshot: Codable {
         claudeFiveHourCountdown = try c.decodeIfPresent(String.self, forKey: .claudeFiveHourCountdown) ?? "Ready"
         claudeWeeklyCountdown = try c.decodeIfPresent(String.self, forKey: .claudeWeeklyCountdown) ?? "1d 15h"
         updatedAt = try c.decodeIfPresent(Date.self, forKey: .updatedAt) ?? Date()
+
+        hasClaude = try c.decodeIfPresent(Bool.self, forKey: .hasClaude) ?? true
+        hasGemini = try c.decodeIfPresent(Bool.self, forKey: .hasGemini) ?? true
 
         selectedGeminiAccount = try c.decodeIfPresent(String.self, forKey: .selectedGeminiAccount) ?? "Account 1"
         account1Name = try c.decodeIfPresent(String.self, forKey: .account1Name) ?? "Account 1"

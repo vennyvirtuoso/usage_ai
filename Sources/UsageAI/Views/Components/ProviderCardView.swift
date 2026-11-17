@@ -22,6 +22,8 @@ public struct ProviderCardView: View {
     }
 
     public var body: some View {
+        let isDetected = isGemini ? tracker.isGeminiDetected : tracker.isClaudeDetected
+
         VStack(alignment: .leading, spacing: 10) {
             // Card Header
             HStack {
@@ -38,10 +40,10 @@ public struct ProviderCardView: View {
                             Text(isGemini ? "Gemini / Antigravity" : "Claude (Anthropic)")
                                 .font(.system(size: 13, weight: .semibold))
                             Circle()
-                                .fill(Color.green)
+                                .fill(isDetected ? Color.green : Color.secondary.opacity(0.6))
                                 .frame(width: 6, height: 6)
                         }
-                        Text(isGemini ? "Google Cloud (Synced All Servers)" : "Anthropic Cloud (Claude Code)")
+                        Text(isDetected ? (isGemini ? "Google Cloud (Synced All Servers)" : "Anthropic Cloud (Claude Code)") : "Standby (Not detected)")
                             .font(.system(size: 9))
                             .foregroundColor(.secondary)
                     }
@@ -51,18 +53,32 @@ public struct ProviderCardView: View {
 
                 // Live Cloud Pill
                 HStack(spacing: 3) {
-                    Image(systemName: "checkmark.circle.fill")
+                    Image(systemName: isDetected ? "checkmark.circle.fill" : "circle.dashed")
                         .font(.system(size: 8))
-                        .foregroundColor(.green)
-                    Text("Live API")
+                        .foregroundColor(isDetected ? .green : .secondary)
+                    Text(isDetected ? "Live API" : "Standby")
                         .font(.system(size: 9, weight: .semibold))
-                        .foregroundColor(.green)
+                        .foregroundColor(isDetected ? .green : .secondary)
                 }
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(Color.green.opacity(0.12))
+                .background(isDetected ? Color.green.opacity(0.12) : Color.secondary.opacity(0.12))
                 .cornerRadius(4)
             }
+
+            if !isDetected {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(isGemini ? "Gemini CLI / accounts not found" : "Claude Code session not detected")
+                        .font(.system(size: 11, weight: .medium))
+                    Text(isGemini ? "Enter your Google accounts in Preferences (⌘,), or install Antigravity CLI to sync." : "Run 'claude' in Terminal to login via Keychain, or configure manual override in Preferences.")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.primary.opacity(0.04))
+                .cornerRadius(10)
+            } else {
 
             // MARK: - Gemini Account Switcher (if Gemini)
             if isGemini {
@@ -175,6 +191,7 @@ public struct ProviderCardView: View {
             .padding(10)
             .background(Color.primary.opacity(0.04))
             .cornerRadius(10)
+            }
         }
         .padding(12)
         .background(

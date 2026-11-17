@@ -37,6 +37,8 @@ public struct QuotaTimelineEntry: TimelineEntry {
     public let selectedAccount: String
     public let account1Name: String
     public let account2Name: String
+    public let hasClaude: Bool
+    public let hasGemini: Bool
 }
 
 public struct QuotaProvider: TimelineProvider {
@@ -55,7 +57,9 @@ public struct QuotaProvider: TimelineProvider {
             claudeWeeklyCountdown: "1d 15h",
             selectedAccount: "Account 1",
             account1Name: "Account 1",
-            account2Name: "Account 2"
+            account2Name: "Account 2",
+            hasClaude: true,
+            hasGemini: true
         )
     }
 
@@ -89,7 +93,9 @@ public struct QuotaProvider: TimelineProvider {
                 claudeWeeklyCountdown: snapshot.claudeWeeklyCountdown,
                 selectedAccount: snapshot.selectedGeminiAccount,
                 account1Name: snapshot.account1Name,
-                account2Name: snapshot.account2Name
+                account2Name: snapshot.account2Name,
+                hasClaude: snapshot.hasClaude,
+                hasGemini: snapshot.hasGemini
             )
         }
 
@@ -155,7 +161,9 @@ public struct QuotaProvider: TimelineProvider {
             claudeWeeklyCountdown: cWkCount,
             selectedAccount: "Account 1",
             account1Name: "Account 1",
-            account2Name: "Account 2"
+            account2Name: "Account 2",
+            hasClaude: true,
+            hasGemini: true
         )
     }
 }

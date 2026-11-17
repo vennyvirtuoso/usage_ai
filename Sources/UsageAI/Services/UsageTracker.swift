@@ -10,6 +10,9 @@ public class UsageTracker: ObservableObject {
     @Published public var claudeCloudUsage: ClaudeCloudUsage? = nil
     @Published public var antigravityCloudUsage: AntigravityCloudUsage? = nil
 
+    @Published public var isClaudeDetected: Bool = true
+    @Published public var isGeminiDetected: Bool = true
+
     @Published public var isSyncing: Bool = false
     @Published public var lastRefreshedDate: Date? = nil
     @Published public var syncStatusMessage: String = "Ready"
@@ -57,9 +60,25 @@ public class UsageTracker: ObservableObject {
         case .iconOnly:
             return ""
         case .fiveHourQuota:
-            return "\(geminiFiveHourPercent)% · \(claudeFiveHourPercent)%"
+            if isGeminiDetected && isClaudeDetected {
+                return "\(geminiFiveHourPercent)% · \(claudeFiveHourPercent)%"
+            } else if isClaudeDetected {
+                return "\(claudeFiveHourPercent)%"
+            } else if isGeminiDetected {
+                return "\(geminiFiveHourPercent)%"
+            } else {
+                return "\(geminiFiveHourPercent)% · \(claudeFiveHourPercent)%"
+            }
         case .weeklyQuota:
-            return "\(geminiWeeklyPercent)% · \(claudeWeeklyPercent)%"
+            if isGeminiDetected && isClaudeDetected {
+                return "\(geminiWeeklyPercent)% · \(claudeWeeklyPercent)%"
+            } else if isClaudeDetected {
+                return "\(claudeWeeklyPercent)%"
+            } else if isGeminiDetected {
+                return "\(geminiWeeklyPercent)%"
+            } else {
+                return "\(geminiWeeklyPercent)% · \(claudeWeeklyPercent)%"
+            }
         }
     }
 
@@ -118,7 +137,9 @@ public class UsageTracker: ObservableObject {
             account2FiveHour: acc2?.fiveHourPercent ?? 100,
             account2Weekly: acc2?.weeklyPercent ?? 100,
             account2FiveHourCountdown: acc2?.fiveHourResetCountdown ?? "Ready",
-            account2WeeklyCountdown: acc2?.weeklyResetCountdown ?? "7d limit"
+            account2WeeklyCountdown: acc2?.weeklyResetCountdown ?? "7d limit",
+            hasClaude: self.isClaudeDetected,
+            hasGemini: self.isGeminiDetected
         )
         snapshot.save()
         WidgetCenter.shared.reloadAllTimelines()
@@ -149,6 +170,18 @@ public class UsageTracker: ObservableObject {
             await MainActor.run {
                 self.antigravityCloudUsage = agyQuota
                 self.claudeCloudUsage = claudeQuota
+
+                let hasClaude = (claudeQuota != nil) || Self.checkClaudeAvailable()
+                let hasGemini = (agyQuota != nil) || Self.checkGeminiAvailable()
+
+                if hasClaude || hasGemini {
+                    self.isClaudeDetected = hasClaude
+                    self.isGeminiDetected = hasGemini
+                } else {
+                    self.isClaudeDetected = true
+                    self.isGeminiDetected = true
+                }
+
                 self.isSyncing = false
                 self.lastRefreshedDate = Date()
                 self.syncStatusMessage = "Synced at \(DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium))"
@@ -156,5 +189,36 @@ public class UsageTracker: ObservableObject {
                 self.updateSnapshot()
             }
         }
+    }
+
+    public static func checkClaudeAvailable() -> Bool {
+        if ClaudeLiveService.shared.getAccessToken() != nil {
+            return true
+        }
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        if FileManager.default.fileExists(atPath: home.appendingPathComponent(".claude.json").path) {
+            return true
+        }
+        if AppSettings.shared.claudeManualOverrideEnabled {
+            return true
+        }
+        return false
+    }
+
+    public static func checkGeminiAvailable() -> Bool {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        if FileManager.default.fileExists(atPath: home.appendingPathComponent(".gemini").path) {
+            return true
+        }
+        if FileManager.default.fileExists(atPath: "/usr/local/bin/agy") ||
+           FileManager.default.fileExists(atPath: "/opt/homebrew/bin/agy") ||
+           FileManager.default.fileExists(atPath: home.appendingPathComponent(".gemini/bin/agy").path) {
+            return true
+        }
+        let email1 = AppSettings.shared.geminiAccount1Email
+        if !email1.isEmpty && email1 != "user1@gmail.com" {
+            return true
+        }
+        return false
     }
 }
