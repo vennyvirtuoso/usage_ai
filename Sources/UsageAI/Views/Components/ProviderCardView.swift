@@ -88,8 +88,8 @@ public struct ProviderCardView: View {
                         .foregroundColor(.secondary)
 
                     HStack(spacing: 4) {
-                        accountButton(email: settings.geminiAccount1Email, label: settings.geminiAccount1Email)
-                        accountButton(email: settings.geminiAccount2Email, label: settings.geminiAccount2Email)
+                        accountButton(email: settings.geminiAccount1Email, label: settings.account1ShortName)
+                        accountButton(email: settings.geminiAccount2Email, label: settings.account2ShortName)
                     }
                     .padding(3)
                     .background(Color.primary.opacity(0.05))
