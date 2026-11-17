@@ -73,7 +73,7 @@ public struct AntigravityCloudUsage: Codable {
 
     private static func formatCountdown(until date: Date) -> String {
         let diff = date.timeIntervalSince(Date())
-        if diff <= 0 { return "now" }
+        if diff <= 0 { return "Ready" }
         let days = Int(diff) / 86400
         let hours = (Int(diff) % 86400) / 3600
         let minutes = (Int(diff) % 3600) / 60
@@ -81,8 +81,10 @@ public struct AntigravityCloudUsage: Codable {
             return "\(days)d \(hours)h"
         } else if hours > 0 {
             return "\(hours)h \(minutes)m"
-        } else {
+        } else if minutes > 0 {
             return "\(minutes)m"
+        } else {
+            return "< 1m"
         }
     }
 }

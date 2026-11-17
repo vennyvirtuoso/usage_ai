@@ -3,11 +3,21 @@ import Security
 
 public struct ClaudeCloudUsage: Codable {
     public var fiveHourUtilization: Double = 0.0 // percentage 0-100 used
-    public var fiveHourRemaining: Double { max(0.0, 100.0 - fiveHourUtilization) }
+    public var fiveHourRemaining: Double {
+        if let reset = fiveHourResetDate, reset <= Date() {
+            return 100.0
+        }
+        return max(0.0, 100.0 - fiveHourUtilization)
+    }
     public var fiveHourResetDate: Date? = nil
 
     public var sevenDayUtilization: Double = 0.0 // percentage 0-100 used
-    public var sevenDayRemaining: Double { max(0.0, 100.0 - sevenDayUtilization) }
+    public var sevenDayRemaining: Double {
+        if let reset = sevenDayResetDate, reset <= Date() {
+            return 100.0
+        }
+        return max(0.0, 100.0 - sevenDayUtilization)
+    }
     public var sevenDayResetDate: Date? = nil
 
     public var claudeCodeBreakdownPercent: Double = 100.0
@@ -16,18 +26,20 @@ public struct ClaudeCloudUsage: Codable {
     public var lastFetched: Date? = nil
 
     public var fiveHourResetCountdown: String {
-        guard let reset = fiveHourResetDate else { return "rolling" }
+        guard let reset = fiveHourResetDate else { return "Ready" }
+        if reset <= Date() { return "Ready" }
         return ClaudeCloudUsage.formatCountdown(until: reset)
     }
 
     public var sevenDayResetCountdown: String {
         guard let reset = sevenDayResetDate else { return "weekly" }
+        if reset <= Date() { return "Ready" }
         return ClaudeCloudUsage.formatCountdown(until: reset)
     }
 
     private static func formatCountdown(until date: Date) -> String {
         let diff = date.timeIntervalSince(Date())
-        if diff <= 0 { return "now" }
+        if diff <= 0 { return "Ready" }
         let days = Int(diff) / 86400
         let hours = (Int(diff) % 86400) / 3600
         let minutes = (Int(diff) % 3600) / 60
@@ -35,8 +47,10 @@ public struct ClaudeCloudUsage: Codable {
             return "\(days)d \(hours)h"
         } else if hours > 0 {
             return "\(hours)h \(minutes)m"
-        } else {
+        } else if minutes > 0 {
             return "\(minutes)m"
+        } else {
+            return "< 1m"
         }
     }
 }
@@ -83,7 +97,14 @@ public final class ClaudeLiveService: @unchecked Sendable {
         return nil
     }
 
+    private var rateLimitedUntil: Date? = nil
+
     public func fetchLiveUsage() async -> ClaudeCloudUsage? {
+        // If currently rate limited by Anthropic API (HTTP 429), avoid spamming and use cache
+        if let until = rateLimitedUntil, until > Date() {
+            return readFromLocalCache()
+        }
+
         // First try live API if token exists
         if let token = getAccessToken() {
             if let usage = await fetchFromAnthropicAPI(token: token) {
@@ -107,9 +128,19 @@ public final class ClaudeLiveService: @unchecked Sendable {
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
-            guard let httpRes = response as? HTTPURLResponse, httpRes.statusCode == 200 else {
+            guard let httpRes = response as? HTTPURLResponse else { return nil }
+
+            if httpRes.statusCode == 429 {
+                let retryStr = httpRes.value(forHTTPHeaderField: "Retry-After") ?? "1200"
+                let retrySec = Double(retryStr) ?? 1200.0
+                self.rateLimitedUntil = Date().addingTimeInterval(retrySec)
                 return nil
             }
+
+            guard httpRes.statusCode == 200 else {
+                return nil
+            }
+            self.rateLimitedUntil = nil
             return parseUsageJSON(data: data)
         } catch {
             return nil
@@ -140,24 +171,47 @@ public final class ClaudeLiveService: @unchecked Sendable {
         usage.lastFetched = Date()
 
         if let fiveHour = dict["five_hour"] as? [String: Any] {
-            if let u = fiveHour["utilization"] as? Double {
-                usage.fiveHourUtilization = u
-            } else if let uInt = fiveHour["utilization"] as? Int {
-                usage.fiveHourUtilization = Double(uInt)
+            var resetsInPast = false
+            if let resetsAtStr = fiveHour["resets_at"] as? String,
+               let rDate = parseDate(resetsAtStr) {
+                if rDate <= Date() {
+                    // Reset date is in the past! Quota has fully replenished.
+                    resetsInPast = true
+                    usage.fiveHourUtilization = 0.0
+                    usage.fiveHourResetDate = nil
+                } else {
+                    usage.fiveHourResetDate = rDate
+                }
             }
-            if let resetsAtStr = fiveHour["resets_at"] as? String {
-                usage.fiveHourResetDate = parseDate(resetsAtStr)
+
+            if !resetsInPast {
+                if let u = fiveHour["utilization"] as? Double {
+                    usage.fiveHourUtilization = u
+                } else if let uInt = fiveHour["utilization"] as? Int {
+                    usage.fiveHourUtilization = Double(uInt)
+                }
             }
         }
 
         if let sevenDay = dict["seven_day"] as? [String: Any] {
-            if let u = sevenDay["utilization"] as? Double {
-                usage.sevenDayUtilization = u
-            } else if let uInt = sevenDay["utilization"] as? Int {
-                usage.sevenDayUtilization = Double(uInt)
+            var resetsInPast = false
+            if let resetsAtStr = sevenDay["resets_at"] as? String,
+               let rDate = parseDate(resetsAtStr) {
+                if rDate <= Date() {
+                    resetsInPast = true
+                    usage.sevenDayUtilization = 0.0
+                    usage.sevenDayResetDate = nil
+                } else {
+                    usage.sevenDayResetDate = rDate
+                }
             }
-            if let resetsAtStr = sevenDay["resets_at"] as? String {
-                usage.sevenDayResetDate = parseDate(resetsAtStr)
+
+            if !resetsInPast {
+                if let u = sevenDay["utilization"] as? Double {
+                    usage.sevenDayUtilization = u
+                } else if let uInt = sevenDay["utilization"] as? Int {
+                    usage.sevenDayUtilization = Double(uInt)
+                }
             }
         }
 

@@ -80,13 +80,35 @@ public struct QuotaProvider: TimelineProvider {
            let cachedUsage = json["cachedUsageUtilization"] as? [String: Any],
            let util = (cachedUsage["utilization"] as? [String: Any]) ?? cachedUsage as? [String: Any] {
 
-            if let fiveHour = util["five_hour"] as? [String: Any],
-               let u = fiveHour["utilization"] as? Double {
-                c5h = max(0, min(100, Int((100.0 - u).rounded())))
+            if let fiveHour = util["five_hour"] as? [String: Any] {
+                var resetsInPast = false
+                if let resetsAtStr = fiveHour["resets_at"] as? String {
+                    let iso = ISO8601DateFormatter()
+                    iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                    if let r = iso.date(from: resetsAtStr) ?? ISO8601DateFormatter().date(from: resetsAtStr), r <= Date() {
+                        resetsInPast = true
+                        c5h = 100
+                        c5hCount = "Ready"
+                    }
+                }
+                if !resetsInPast, let u = fiveHour["utilization"] as? Double {
+                    c5h = max(0, min(100, Int((100.0 - u).rounded())))
+                }
             }
-            if let sevenDay = util["seven_day"] as? [String: Any],
-               let u = sevenDay["utilization"] as? Double {
-                cWk = max(0, min(100, Int((100.0 - u).rounded())))
+            if let sevenDay = util["seven_day"] as? [String: Any] {
+                var resetsInPast = false
+                if let resetsAtStr = sevenDay["resets_at"] as? String {
+                    let iso = ISO8601DateFormatter()
+                    iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                    if let r = iso.date(from: resetsAtStr) ?? ISO8601DateFormatter().date(from: resetsAtStr), r <= Date() {
+                        resetsInPast = true
+                        cWk = 100
+                        cWkCount = "Ready"
+                    }
+                }
+                if !resetsInPast, let u = sevenDay["utilization"] as? Double {
+                    cWk = max(0, min(100, Int((100.0 - u).rounded())))
+                }
             }
         }
 
