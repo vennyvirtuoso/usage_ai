@@ -11,30 +11,71 @@
 
 ---
 
-## 🎭 Meet The Mascot: "Ghee-Babu" (The Panicking Diya)
+## 🖥️ Live UI Preview
 
 ```text
-                     🔥 EMERGENCY IN THE TERMINAL 🔥
+   File  Edit  View  Window  Help                [ ✦ 97% · 100% ]   Tue 9:41 AM
+                                                    └──────┬──────┘
+                                                           ▼
+╭─────────────────────────────────────────────────────────────────────────────╮
+│  📈 Ghee-Khatam                  ● Synced to Cloud             ↻      ⚙     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  🪟 Desktop Widget Active        Pinned to desktop screen         [Hide]    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  ✨ Google Gemini / Antigravity                             ● Live API      │
+│     Synced across all cloud servers & remote instances                      │
+│     ACCOUNT: [ ● Work (user1@gmail.com) ]  [ Personal ]                     │
+│                                                                             │
+│     5-Hour Rolling Limit Remaining:               97%   (resets in 4h 39m)  │
+│     [██████████████████████████████████████░]                               │
+│                                                                             │
+│     Weekly Plan Limit Remaining:                  79%   (resets in 4d 8h)   │
+│     [███████████████████████████████░░░░░░░░]                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  🤖 Claude Code (Anthropic)                                 ● Live API      │
+│     Direct macOS Keychain OAuth Session Sync                                │
+│                                                                             │
+│     5-Hour Rolling Limit Remaining:              100%   (Ready)             │
+│     [████████████████████████████████████████]                              │
+│                                                                             │
+│     Weekly Limit Remaining:                       83%   (resets in 1d 15h)  │
+│     [█████████████████████████████████░░░░░░]                               │
+│     ↳ Active: Claude Code (99% utilization share)                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  ⏱️ Refreshes automatically every 20m                      [Quit Ghee-Khatam]│
+╰─────────────────────────────────────────────────────────────────────────────╯
+```
 
-              ╭───────────────────────────────────────────────────╮
-              │  "ARREY BHAGWAAN! GHEE KHATAM HO GAYA! 😱        │
-              │   Who ran 'claude fix this bug' 50 times in       │
-              │   a row?! My 5-hour quota is down to ZERO!"       │
-              ╰─────────────────────────┬─────────────────────────╯
-                                        │
-                                  .-----┴-----.
-                                 /  .-------.  \
-                                |  /  o   o  \  |
-                                |  |    ▽    |  |  <-- Sweating Ghee Dabba
-                                |  \  '---'  /  |      (Witnessing your 100k
-                                 \  `-------'  /        token context dump)
-                                 /`-----------'\
-                                /  [  EMPTY  ]  \
-                               |   [ 0% GHEE ]   |
-                               |   [ ======= ]   |
-                                \_______________/
-                                     ||   ||
-                                    (_/   \_)
+### 🧩 Native macOS Notification Center & Desktop Widgets
+
+```text
+╭─────────────────────────────────────────────────────────────────────────────╮
+│  macOS Notification Center / Desktop Widget (Medium)                        │
+│                                                                             │
+│   ● AI Quotas                                                  Every 20m    │
+│  ┌──────────────────────────────────┬──────────────────────────────────┐    │
+│  │ ✨ Gemini       [Work] [Personal]│ 🤖 Claude Code          Pro Sync │    │
+│  │                                  │                                  │    │
+│  │ 5-Hour                       97% │ 5-Hour                      100% │    │
+│  │ [████████████████████████░]      │ [██████████████████████████]     │    │
+│  │ Resets in 4h 39m                 │ Ready to burn                    │    │
+│  │                                  │                                  │    │
+│  │ Weekly                       79% │ Weekly                       83% │    │
+│  │ [███████████████████░░░░░]      │ [█████████████████████░░░░]      │    │
+│  │ Resets in 4d 8h                  │ Resets in 1d 15h                 │    │
+│  └──────────────────────────────────┴──────────────────────────────────┘    │
+│                                                                             │
+│  Small Widget (Radial Gauges):                                              │
+│  ┌───────────────────────────────┐                                          │
+│  │ [Work]          AI Quota      │                                          │
+│  │                               │                                          │
+│  │   ╭───╮          ╭───╮        │                                          │
+│  │  │ 97% │        │100% │       │                                          │
+│  │   ╰───╯          ╰───╯        │                                          │
+│  │   Gemini        Claude        │                                          │
+│  │  (4h 39m)       (Ready)       │                                          │
+│  └───────────────────────────────┘                                          │
+╰─────────────────────────────────────────────────────────────────────────────╯
 ```
 
 ---
