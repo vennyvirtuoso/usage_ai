@@ -1,123 +1,179 @@
-# ⚡ Usage AI
+# 🪔 Ghee-Khatam (घी खत्म)
+### *“Bhagwaan! Ghee khatam ho gaya!” — Never let your AI oil run dry.*
 
-**Usage AI** is a lightweight, native macOS menu bar and desktop widget app built with Swift and SwiftUI. It tracks real-time token consumption, caching efficiency, and estimated costs across **Claude (Anthropic)** and **Gemini (Antigravity)** sessions.
-
-![macOS 14+](https://img.shields.io/badge/macOS-14.0%2B-blue?logo=apple)
-![Swift 6](https://img.shields.io/badge/Swift-6.0-orange?logo=swift)
-![Architecture](https://img.shields.io/badge/Arch-Apple%20Silicon%20(ARM64)-purple)
-
----
-
-## 🌟 Key Features
-
-- **Hybrid Widget Design**:
-  - **Menu Bar Extra**: Sits unobtrusively in your macOS status bar (`✨ 14.2k  🤖 28.5k` or `⚡ 42.7k`), showing live token stats at a glance.
-  - **Floating Desktop Widget**: Can be detached with one click into a sleek, glassmorphic floating HUD widget on your desktop.
-  - **Compact & Expanded Modes**: Switch between a minimal dual-gauge badge and a full statistical card.
-  - **Pin to Desktop**: Option to pin behind normal windows like a native macOS desktop widget or float on top.
-
-- **Dual Provider Intelligence**:
-  - **Gemini / Antigravity**: Automatically scans local session transcripts (`~/.gemini/antigravity/brain/`) for prompt tokens, completion tokens, cached tokens, and active models.
-  - **Claude (Anthropic)**: Automatically parses Claude Code sessions (`~/.claude/projects/`, `~/.claude/sessions/`) for input, output, cache-read, and cache-creation tokens.
-
-- **CLI `/quota` & `/usage` Metrics**:
-  - **Active Context Window**: Tracks real-time context token load in the active session against the model's window limit (e.g. `15.5k / 1.0M tokens (1.5%)` for Gemini, `24k / 200k tokens (12%)` for Claude).
-  - **Daily Quota & Rate Limits**: Shows % daily quota remaining, requests used today vs tier limits (e.g. `1,500 RPD`), and exact countdown until quota resets (`⏱ Resets in Xh Ym at 00:00 UTC`).
-  - **Exact Session vs Daily Breakdown**: Matches the exact stats of Claude Code's `/usage` & `/cost` and Antigravity's `/quota`.
-
-- **Cost & Cache Optimization**:
-  - Live cost estimations calculated per model (e.g. Gemini 3.8 Flash, 2.0 Flash, 1.5 Pro, Claude 3.5 Sonnet, Claude 3 Opus, Haiku).
-  - Cache hit ratio metrics so you know how much context caching saves you.
-
-- **Zero API Keys Required (With Optional Cloud Support)**:
-  - Works out of the box by reading local CLI and IDE session logs.
-  - Optional support for Anthropic and Google Gemini API keys in Preferences for live cloud monitoring.
+<p align="center">
+  <img src="https://img.shields.io/badge/Platform-macOS%2014.0%2B%20(Sonoma%20%2F%20Sequoia)-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS 14+">
+  <img src="https://img.shields.io/badge/Architecture-Universal%20(ARM64%20%2F%20x86__64)-blueviolet?style=for-the-badge" alt="Universal Binary">
+  <img src="https://img.shields.io/badge/Swift-5.9%2B%20%2F%20SwiftUI%20%2B%20WidgetKit-FA7343?style=for-the-badge&logo=swift&logoColor=white" alt="SwiftUI + WidgetKit">
+  <img src="https://img.shields.io/badge/RAM%20Usage-%3C%2015%20MB-success?style=for-the-badge" alt="Low RAM">
+  <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT License">
+</p>
 
 ---
 
-## 🚀 Quick Start
+## 🎭 Meet The Mascot: "Ghee-Babu" (The Panicking Diya)
 
-### 1. Build and Run
-Clone or navigate to the repository directory and run:
+```text
+                     🔥 EMERGENCY IN THE TERMINAL 🔥
 
-```bash
-# Build and launch immediately
-./run.sh
+              ╭───────────────────────────────────────────────────╮
+              │  "ARREY BHAGWAAN! GHEE KHATAM HO GAYA! 😱        │
+              │   Who ran 'claude fix this bug' 50 times in       │
+              │   a row?! My 5-hour quota is down to ZERO!"       │
+              ╰─────────────────────────┬─────────────────────────╯
+                                        │
+                                  .-----┴-----.
+                                 /  .-------.  \
+                                |  /  o   o  \  |
+                                |  |    ▽    |  |  <-- Sweating Ghee Dabba
+                                |  \  '---'  /  |      (Witnessing your 100k
+                                 \  `-------'  /        token context dump)
+                                 /`-----------'\
+                                /  [  EMPTY  ]  \
+                               |   [ 0% GHEE ]   |
+                               |   [ ======= ]   |
+                                \_______________/
+                                     ||   ||
+                                    (_/   \_)
 ```
 
-Or using `make`:
+> **Why "Ghee-Khatam"?**  
+> In Indian homes, the oil lamp (*diya*) or kitchen tin running out of *ghee* is an immediate domestic crisis. In modern software engineering, it's that soul-crushing moment when **Claude Code** or **Google Gemini** locks you out with:  
+> `Rate limit reached. Quota resets in 4 hours 32 minutes.`  
+>
+> **Ghee-Khatam** keeps a watchful eye on your AI tanks before the fire goes out.
 
-```bash
-make run
+---
+
+## 💡 What is Ghee-Khatam?
+
+**Ghee-Khatam** is an ultra-lightweight, 100% native macOS Menu Bar utility and **WidgetKit Notification Center Widget** that gives you instant, live visibility into your **Claude Code (Anthropic)** and **Google Gemini (Antigravity)** quotas across all local and remote sessions.
+
+* **Pure Swift & SwiftUI**: Zero Electron bloat, zero webviews, zero Node dependencies.
+* **Apple Silicon & Intel Ready**: Universal binary running natively on macOS Sonoma (14.0+) and Sequoia (15.0+).
+* **0.0% Idle CPU**: Sleeps peacefully between refreshes and consumes less than 15 MB of RAM.
+
+---
+
+## 🌟 Key Highlights
+
+```text
+ ┌────────────────────────────────────────────────────────┐
+ │  ✦ 92% · 100%                                          │  ← Menu Bar (Minimalist SF Symbol)
+ └────────────────────────────────────────────────────────┘
+                       │
+       ┌───────────────┴───────────────┐
+       ▼                               ▼
+ ┌───────────────────────────┐   ┌───────────────────────────┐
+ │ 🧩 Notification Center    │   │ 🪟 Floating Desktop HUD   │
+ │   Widget (Small / Medium) │   │   Obsidian Glass Aesthetic│
+ └───────────────────────────┘   └───────────────────────────┘
 ```
 
-### 2. Install to Applications
-To install Usage AI into your macOS `/Applications` folder:
+* **🤖 Official Claude Code Sync**: Reads your official session credentials securely from your macOS Keychain (`Claude Code-credentials`) and queries Anthropic's official usage endpoint—no manual API keys or brittle browser scraping.
+* **👥 Multi-Account Gemini Switcher**: One-click toggle between accounts (e.g. `Work` ⇄ `Personal` or `account1` ⇄ `account2`) directly from the widget or menu bar with independent 5-hour rolling and weekly quotas.
+* **🧩 Native macOS WidgetKit Support**: Built as a native `.appex` extension. Pin it right to your **Desktop** or inside **Notification Center** (`.systemSmall` and `.systemMedium`).
+* **✦ Clean Single-Icon Menu Bar**: Replaces distracting clutter with a clean, single Apple SF Symbol (`✦`) followed by crisp quota typography (`✦ 92% · 100%`) or clean icon-only mode.
+* **⏱️ Smart Polling with Local Timers**: 20-minute batched sync that respects provider rate limits while keeping smooth second-by-second countdown timers (`resets in 42m` or `Ready`).
+* **🔒 100% Local & Private**: Read-only monitoring. Your tokens never leave your Mac and zero telemetry is collected.
+
+---
+
+## 🖼️ User Interface
+
+### 1. Menu Bar Popover
+A single click reveals an elegant glassmorphic dashboard:
+- **Claude Quota Card**: 5-Hour rolling limit remaining, weekly account remaining, accurate reset countdowns, and active Claude Code percentage share.
+- **Gemini Card**: Account selector tabs, 5-hour limits, weekly plan quota, and reset timers.
+- **One-Click Refresh & Settings**: Instant cloud sync on demand.
+
+### 2. Notification Center & Desktop Widget
+- **Medium Widget**: Displays dual cards for Gemini and Claude side-by-side with an interactive account toggle button powered by **AppIntents**.
+- **Small Widget**: High-contrast dual radial gauges with a quick-switch account badge.
+
+---
+
+## 🚀 1-Command Installation
+
+Ghee-Khatam requires **macOS 14.0 (Sonoma)** or **macOS 15.0+ (Sequoia)**.
+
+### Option A: Clone & Auto-Install (Recommended)
+
+Open Terminal and run:
 
 ```bash
-make install
+git clone https://github.com/your-username/ghee-khatam.git
+cd ghee-khatam
+./install.sh
 ```
 
----
-
-## 🖥️ Usage
-
-### Menu Bar Extra
-- **Left-Click**: Opens the rich popup dashboard displaying:
-  - Today's combined tokens and daily budget gauge.
-  - Usage distribution comparison bar (Gemini vs Claude).
-  - Gemini Antigravity card (Today tokens, all-time, cache ratio, estimated cost).
-  - Claude card (Today tokens, all-time, cache ratio, estimated cost).
-  - Model breakdown pills.
-  - "Desktop Widget" button to toggle the floating widget.
-  - Refresh and Settings buttons.
-- **Right-Click**: Opens the quick context menu (Refresh, Toggle Widget, Preferences, Quit).
-
-### Desktop Floating Widget
-- Click **"Desktop Widget"** in the menu bar popover to detach it.
-- **Drag**: Click and drag anywhere on the widget background to move it anywhere on your screens.
-- **Compact Toggle (`⤢`)**: Toggle between compact dual-gauge and full card mode.
-- **Pin Toggle (`📌`)**: Pin behind regular windows or float above all windows.
-- **Close (`✕`)**: Closes the widget while keeping the menu bar status item active.
+The installer will:
+1. Compile the native app and widget with `swiftc`.
+2. Sign the bundle with your local Apple Development certificate (or ad-hoc signature).
+3. Install to `/Applications/Ghee-Khatam.app`.
+4. Register the WidgetKit extension with LaunchServices and launch Ghee-Khatam.
 
 ---
 
-## ⚙️ Preferences & Customization
+## 🧩 Adding Ghee-Khatam to Notification Center or Desktop
 
-Open **Preferences** via the gear icon or right-clicking the menu bar item:
+Once installed, adding the widget takes 10 seconds:
 
-1. **General**:
-   - Change Menu Bar display format:
-     - `Both Tokens (✨ 12k | 🤖 45k)`
-     - `Total Combined (⚡ 57k)`
-     - `Total + Cost (⚡ 57k · $0.24)`
-     - `Minimal Icon Only`
-   - Refresh interval: `5s`, `15s`, `30s`, or `1m`.
-   - Daily token budget (for circular progress gauge).
-   - Widget opacity and desktop pinning.
-2. **Local Logs**:
-   - Configure custom directory paths for Antigravity or Claude logs.
-   - Rescan cache.
-3. **API Keys (Optional)**:
-   - Enter Google Gemini API Key and Anthropic API Key to test connections.
+1. Click the **Date & Time** in the top-right corner of your screen to open macOS Notification Center.
+2. Scroll to the bottom and click **"Edit Widgets"**.
+3. In the left sidebar, select **Ghee-Khatam** (or search `Ghee`).
+4. Choose **Small** or **Medium**, then click **`+`** or drag it anywhere onto your desktop or Notification Center!
 
 ---
 
-## 🔒 macOS File Permissions Note
+## ⚙️ Configuration & Accounts
 
-macOS has privacy protection on user directories like `~/.gemini` and `~/.claude`.
-- When running outside a sandbox or as a regular macOS app, Usage AI reads files from your user directory directly.
-- If prompted by macOS, grant **Full Disk Access** or folder access in **System Settings > Privacy & Security > Full Disk Access** to allow the app to read local CLI transcripts.
-- Alternatively, use the **Browse...** button in **Preferences > Local Logs** to explicitly select your logs folder.
+Open **Preferences** by clicking the menu bar icon and selecting the settings gear (or pressing `⌘,`):
+
+| Setting | Options | Description |
+| :--- | :--- | :--- |
+| **Menu Bar Style** | `Minimal Icon (✦)`, `5-Hour Quotas (✦ 92% · 100%)`, `Weekly Quotas` | Configure how information appears in your menu bar. |
+| **Gemini Accounts** | Custom emails (e.g. `work@company.com`, `personal@gmail.com`) | Enter your Google accounts; button labels dynamically adapt to your email username. |
+| **Refresh Interval** | `5m`, `15m`, `20m (Default)`, `1h` | Controls background sync cadence. |
+| **Desktop Widget** | Obsidian, Frosted, Opacity slider (0% - 100%), Pin behind windows | Customize the floating HUD widget. |
 
 ---
 
-## 🧪 Running Tests
+## 🛠️ Architecture & Under the Hood
 
-To verify scanners, parsers, and pricing calculations:
-
-```bash
-make test
+```text
+Ghee-Khatam.app
+├── Contents/MacOS/GheeKhatam            ← Main AppKit / SwiftUI Menu Bar Application
+├── Contents/Resources/Info.plist       ← Bundle ID: com.gheekhatam.mac
+└── Contents/PlugIns/
+    └── GheeKhatamWidget.appex          ← Native WidgetKit ExtensionKit PlugIn
+        ├── MacOS/GheeKhatamWidget      ← Linked with _NSExtensionMain + WidgetBundle
+        └── Info.plist                  ← com.apple.widgetkit-extension
 ```
 
-All tests run against mock Antigravity and Claude transcript fixtures.
+1. **Keychain Access for Claude Code**:  
+   Ghee-Khatam reads your authenticated Claude Code session token directly from macOS Keychain (`Claude Code-credentials`). It calls the official Anthropic `/api/oauth/usage` endpoint with `anthropic-beta: oauth-2025-04-20`, exactly mirroring Claude CLI's `/usage`.
+2. **IPC Data Sharing via Containers**:  
+   The main application serializes a lightweight `quota_snapshot.json` payload into both Application Support and the sandbox container directory (`Library/Containers/com.gheekhatam.mac.widget/`), enabling the WidgetKit extension to render snapshots with zero IPC latency.
+3. **Interactive WidgetKit Buttons**:  
+   Powered by Swift `AppIntents`, allowing direct account switching inside the Notification Center without opening the main window.
+
+---
+
+## 🔒 Privacy & Security
+
+* **No Analytics / Telemetry**: Absolutely zero data collection.
+* **100% Read-Only**: Ghee-Khatam monitors quotas only. It never modifies, resets, or triggers remote cloud usage.
+* **Local Keychain Access**: All credential exchanges happen locally between your Mac and Anthropic / Google's official endpoints over HTTPS.
+
+---
+
+## 📄 License
+
+Ghee-Khatam is open-source software licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+
+---
+
+<p align="center">
+  <b>Made with 🪔 for developers who never want to run out of fuel mid-build.</b>
+</p>

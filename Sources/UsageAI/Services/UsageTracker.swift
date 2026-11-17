@@ -17,12 +17,24 @@ public class UsageTracker: ObservableObject {
     private var refreshTimer: Timer?
     private var cancellables = Set<AnyCancellable>()
 
+    public var currentGeminiAccount: GeminiAccountQuota? {
+        let email = AppSettings.shared.selectedGeminiAccountTab
+        return antigravityCloudUsage?.accounts.first(where: { $0.email == email })
+            ?? antigravityCloudUsage?.accounts.first
+    }
+
     public var geminiFiveHourPercent: Int {
-        antigravityCloudUsage?.geminiFiveHourPercent ?? 97
+        if let acc = currentGeminiAccount {
+            return acc.fiveHourPercent
+        }
+        return antigravityCloudUsage?.geminiFiveHourPercent ?? 97
     }
 
     public var geminiWeeklyPercent: Int {
-        antigravityCloudUsage?.geminiWeeklyPercent ?? 79
+        if let acc = currentGeminiAccount {
+            return acc.weeklyPercent
+        }
+        return antigravityCloudUsage?.geminiWeeklyPercent ?? 79
     }
 
     public var claudeFiveHourPercent: Int {
@@ -64,6 +76,52 @@ public class UsageTracker: ObservableObject {
                 self?.startTimer()
             }
             .store(in: &cancellables)
+
+        AppSettings.shared.$selectedGeminiAccountTab
+            .dropFirst()
+            .sink { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.updateSnapshot()
+                    self?.objectWillChange.send()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    public func updateSnapshot() {
+        let agyQuota = antigravityCloudUsage
+        let claudeQuota = claudeCloudUsage
+        let email1 = AppSettings.shared.geminiAccount1Email
+        let email2 = AppSettings.shared.geminiAccount2Email
+        let acc1 = agyQuota?.accounts.first(where: { $0.email == email1 })
+        let acc2 = agyQuota?.accounts.first(where: { $0.email == email2 })
+
+        let selected = AppSettings.shared.selectedGeminiAccountTab == email2 ? AppSettings.shared.account2ShortName : AppSettings.shared.account1ShortName
+
+        let snapshot = SharedQuotaSnapshot(
+            geminiFiveHourPercent: self.geminiFiveHourPercent,
+            geminiWeeklyPercent: self.geminiWeeklyPercent,
+            geminiFiveHourCountdown: currentGeminiAccount?.fiveHourResetCountdown ?? (agyQuota?.fiveHourResetCountdown ?? "4h 39m"),
+            geminiWeeklyCountdown: currentGeminiAccount?.weeklyResetCountdown ?? (agyQuota?.weeklyResetCountdown ?? "4d 8h"),
+            claudeFiveHourPercent: self.claudeFiveHourPercent,
+            claudeWeeklyPercent: self.claudeWeeklyPercent,
+            claudeFiveHourCountdown: claudeQuota?.fiveHourResetCountdown ?? "Ready",
+            claudeWeeklyCountdown: claudeQuota?.sevenDayResetCountdown ?? "1d 15h",
+            updatedAt: Date(),
+            selectedGeminiAccount: selected,
+            account1Name: AppSettings.shared.account1ShortName,
+            account1FiveHour: acc1?.fiveHourPercent ?? 97,
+            account1Weekly: acc1?.weeklyPercent ?? 79,
+            account1FiveHourCountdown: acc1?.fiveHourResetCountdown ?? "4h 39m",
+            account1WeeklyCountdown: acc1?.weeklyResetCountdown ?? "4d 8h",
+            account2Name: AppSettings.shared.account2ShortName,
+            account2FiveHour: acc2?.fiveHourPercent ?? 100,
+            account2Weekly: acc2?.weeklyPercent ?? 100,
+            account2FiveHourCountdown: acc2?.fiveHourResetCountdown ?? "Ready",
+            account2WeeklyCountdown: acc2?.weeklyResetCountdown ?? "7d limit"
+        )
+        snapshot.save()
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     public func startTimer() {
@@ -95,19 +153,7 @@ public class UsageTracker: ObservableObject {
                 self.lastRefreshedDate = Date()
                 self.syncStatusMessage = "Synced at \(DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium))"
 
-                // Save shared snapshot for macOS Notification Center widget
-                let snapshot = SharedQuotaSnapshot(
-                    geminiFiveHourPercent: self.geminiFiveHourPercent,
-                    geminiWeeklyPercent: self.geminiWeeklyPercent,
-                    geminiFiveHourCountdown: agyQuota?.fiveHourResetCountdown ?? "4h 39m",
-                    geminiWeeklyCountdown: agyQuota?.weeklyResetCountdown ?? "4d 8h",
-                    claudeFiveHourPercent: self.claudeFiveHourPercent,
-                    claudeWeeklyPercent: self.claudeWeeklyPercent,
-                    claudeFiveHourCountdown: claudeQuota?.fiveHourResetCountdown ?? "3h 12m",
-                    claudeWeeklyCountdown: claudeQuota?.sevenDayResetCountdown ?? "1d 15h"
-                )
-                snapshot.save()
-                WidgetCenter.shared.reloadAllTimelines()
+                self.updateSnapshot()
             }
         }
     }

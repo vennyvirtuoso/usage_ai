@@ -119,7 +119,7 @@ public struct SettingsView: View {
                         Text("Primary Account (Auto-Synced with CLI):")
                             .font(.subheadline)
                             .fontWeight(.medium)
-                        TextField("alexasolosix@gmail.com", text: $settings.geminiAccount1Email)
+                        TextField("user1@gmail.com", text: $settings.geminiAccount1Email)
                             .textFieldStyle(.roundedBorder)
                         Text("Uses ~/.gemini/bin/agy /quota to query your real-time cloud weekly and 5-hour limits.")
                             .font(.caption)
@@ -132,7 +132,7 @@ public struct SettingsView: View {
                         Text("Secondary Account:")
                             .font(.subheadline)
                             .fontWeight(.medium)
-                        TextField("parasgandre@gmail.com", text: $settings.geminiAccount2Email)
+                        TextField("user2@gmail.com", text: $settings.geminiAccount2Email)
                             .textFieldStyle(.roundedBorder)
 
                         Text("Optional Gemini API Key for secondary account:")
@@ -148,7 +148,7 @@ public struct SettingsView: View {
                 .cornerRadius(10)
 
                 // Claude Account
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 12) {
                     Text("Anthropic Claude Account")
                         .font(.headline)
 
@@ -157,18 +157,64 @@ public struct SettingsView: View {
                             .foregroundColor(.green)
                             .font(.system(size: 16))
                         VStack(alignment: .leading, spacing: 1) {
-                            Text("Account: vijendra9753@gmail.com (Claude Pro)")
+                            Text("Account: Connected (Claude Pro)")
                                 .font(.subheadline)
                                 .bold()
-                            Text("Connected via macOS Keychain (Claude Code-credentials)")
+                            Text("Connected via macOS Keychain (Claude Code CLI)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                     }
 
-                    Text("Automatically queries https://api.anthropic.com/api/oauth/usage to fetch live 5-hour session and weekly quotas.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    Divider()
+
+                    // Web Session Sync / Override
+                    VStack(alignment: .leading, spacing: 10) {
+                        Toggle("Sync claude.ai Web Session Usage", isOn: $settings.claudeManualOverrideEnabled)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+
+                        if settings.claudeManualOverrideEnabled {
+                            HStack(spacing: 16) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Current Session Used (%):")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    HStack {
+                                        TextField("8", value: $settings.claudeCurrentUsedPercent, format: .number)
+                                            .textFieldStyle(.roundedBorder)
+                                            .frame(width: 80)
+                                        Text("% used (\(Int(max(0, 100 - settings.claudeCurrentUsedPercent)))% left)")
+                                            .font(.caption)
+                                    }
+                                }
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Resets At:")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    TextField("7:10 AM", text: $settings.claudeSessionResetTime)
+                                        .textFieldStyle(.roundedBorder)
+                                        .frame(width: 120)
+                                }
+
+                                Button("Apply") {
+                                    tracker.refreshNow()
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .controlSize(.small)
+                            }
+                            .padding(.top, 4)
+
+                            Text("Directly matches what is displayed on the claude.ai website under Settings > Usage.")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("When disabled, queries the official Claude Code CLI OAuth API in the background.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -240,10 +286,10 @@ public struct SettingsView: View {
                 .font(.system(size: 48))
                 .foregroundStyle(LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing))
 
-            Text("Usage AI")
+            Text("Ghee-Khatam")
                 .font(.system(size: 20, weight: .bold, design: .rounded))
 
-            Text("Version 1.2.0")
+            Text("Version 2.0.0 (Open Source)")
                 .font(.caption)
                 .foregroundColor(.secondary)
 

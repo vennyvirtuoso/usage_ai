@@ -26,6 +26,9 @@ public struct ClaudeCloudUsage: Codable {
     public var lastFetched: Date? = nil
 
     public var fiveHourResetCountdown: String {
+        if AppSettings.shared.claudeManualOverrideEnabled {
+            return AppSettings.shared.claudeSessionResetTime
+        }
         guard let reset = fiveHourResetDate else { return "Ready" }
         if reset <= Date() { return "Ready" }
         return ClaudeCloudUsage.formatCountdown(until: reset)
@@ -100,6 +103,14 @@ public final class ClaudeLiveService: @unchecked Sendable {
     private var rateLimitedUntil: Date? = nil
 
     public func fetchLiveUsage() async -> ClaudeCloudUsage? {
+        // If web session / manual override is enabled in Preferences:
+        if AppSettings.shared.claudeManualOverrideEnabled {
+            var usage = ClaudeCloudUsage()
+            usage.fiveHourUtilization = AppSettings.shared.claudeCurrentUsedPercent
+            usage.lastFetched = Date()
+            return usage
+        }
+
         // If currently rate limited by Anthropic API (HTTP 429), avoid spamming and use cache
         if let until = rateLimitedUntil, until > Date() {
             return readFromLocalCache()

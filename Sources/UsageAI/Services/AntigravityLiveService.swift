@@ -39,7 +39,7 @@ public struct GeminiAccountQuota: Identifiable, Codable {
 
 public struct AntigravityCloudUsage: Codable {
     public var accounts: [GeminiAccountQuota] = []
-    public var activeAccountEmail: String = "alexasolosix@gmail.com"
+    public var activeAccountEmail: String = "user1@gmail.com"
 
     public var geminiFiveHourRemaining: Double = 1.0 // 0.0 to 1.0
     public var geminiFiveHourResetDate: Date? = nil
@@ -149,7 +149,7 @@ public final class AntigravityLiveService: @unchecked Sendable {
 
         var result = usage ?? AntigravityCloudUsage()
 
-        // Populate the two accounts: alexasolosix@gmail.com and parasgandre@gmail.com
+        // Populate configured accounts
         let email1 = AppSettings.shared.geminiAccount1Email
         let email2 = AppSettings.shared.geminiAccount2Email
 
@@ -163,7 +163,7 @@ public final class AntigravityLiveService: @unchecked Sendable {
             tierName: "Antigravity Cloud"
         )
 
-        // Account 2: parasgandre@gmail.com
+        // Account 2
         let acc2 = GeminiAccountQuota(
             email: email2,
             fiveHourRemaining: 1.0,

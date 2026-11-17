@@ -33,7 +33,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
                 backing: .buffered,
                 defer: false
             )
-            window.title = "Usage AI Preferences"
+            window.title = "Ghee-Khatam Preferences"
             window.minSize = NSSize(width: 580, height: 440)
             window.contentView = NSHostingView(rootView: SettingsView())
             window.center()

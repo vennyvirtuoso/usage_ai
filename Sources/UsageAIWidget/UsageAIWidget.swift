@@ -1,6 +1,28 @@
 import WidgetKit
 import SwiftUI
 import AppKit
+import AppIntents
+
+public struct ToggleGeminiAccountIntent: AppIntent {
+    public static var title: LocalizedStringResource = "Toggle Gemini Account"
+    public static var description = IntentDescription("Switch between Account 1 and Account 2")
+
+    @Parameter(title: "Target Account")
+    public var targetAccount: String
+
+    public init() {
+        self.targetAccount = "Account 1"
+    }
+
+    public init(targetAccount: String) {
+        self.targetAccount = targetAccount
+    }
+
+    public func perform() async throws -> some IntentResult {
+        SharedQuotaSnapshot.toggleAccount(to: targetAccount)
+        return .result()
+    }
+}
 
 public struct QuotaTimelineEntry: TimelineEntry {
     public let date: Date
@@ -12,6 +34,9 @@ public struct QuotaTimelineEntry: TimelineEntry {
     public let claudeWeekly: Int
     public let claudeFiveHourCountdown: String
     public let claudeWeeklyCountdown: String
+    public let selectedAccount: String
+    public let account1Name: String
+    public let account2Name: String
 }
 
 public struct QuotaProvider: TimelineProvider {
@@ -26,8 +51,11 @@ public struct QuotaProvider: TimelineProvider {
             geminiWeeklyCountdown: "4d 8h",
             claudeFiveHour: 93,
             claudeWeekly: 83,
-            claudeFiveHourCountdown: "3h 12m",
-            claudeWeeklyCountdown: "1d 15h"
+            claudeFiveHourCountdown: "Ready",
+            claudeWeeklyCountdown: "1d 15h",
+            selectedAccount: "Account 1",
+            account1Name: "Account 1",
+            account2Name: "Account 2"
         )
     }
 
@@ -58,14 +86,17 @@ public struct QuotaProvider: TimelineProvider {
                 claudeFiveHour: snapshot.claudeFiveHourPercent,
                 claudeWeekly: snapshot.claudeWeeklyPercent,
                 claudeFiveHourCountdown: snapshot.claudeFiveHourCountdown,
-                claudeWeeklyCountdown: snapshot.claudeWeeklyCountdown
+                claudeWeeklyCountdown: snapshot.claudeWeeklyCountdown,
+                selectedAccount: snapshot.selectedGeminiAccount,
+                account1Name: snapshot.account1Name,
+                account2Name: snapshot.account2Name
             )
         }
 
-        var g5h = 97
-        var gWk = 79
-        var g5hCount = "4h 39m"
-        var gWkCount = "4d 8h"
+        let g5h = 97
+        let gWk = 79
+        let g5hCount = "4h 39m"
+        let gWkCount = "4d 8h"
 
         var c5h = 93
         var cWk = 83
@@ -77,8 +108,8 @@ public struct QuotaProvider: TimelineProvider {
         let claudeJson = home.appendingPathComponent(".claude.json")
         if let data = try? Data(contentsOf: claudeJson),
            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-           let cachedUsage = json["cachedUsageUtilization"] as? [String: Any],
-           let util = (cachedUsage["utilization"] as? [String: Any]) ?? cachedUsage as? [String: Any] {
+           let cachedUsage = json["cachedUsageUtilization"] as? [String: Any] {
+            let util = (cachedUsage["utilization"] as? [String: Any]) ?? cachedUsage
 
             if let fiveHour = util["five_hour"] as? [String: Any] {
                 var resetsInPast = false
@@ -121,7 +152,10 @@ public struct QuotaProvider: TimelineProvider {
             claudeFiveHour: c5h,
             claudeWeekly: cWk,
             claudeFiveHourCountdown: c5hCount,
-            claudeWeeklyCountdown: cWkCount
+            claudeWeeklyCountdown: cWkCount,
+            selectedAccount: "Account 1",
+            account1Name: "Account 1",
+            account2Name: "Account 2"
         )
     }
 }
@@ -165,11 +199,38 @@ public struct UsageAIWidgetEntryView: View {
             HStack(spacing: 10) {
                 // Gemini Card
                 VStack(alignment: .leading, spacing: 5) {
-                    HStack {
+                    HStack(alignment: .center) {
                         Text("✨ Gemini")
                             .font(.system(size: 11, weight: .bold))
                             .foregroundColor(.blue)
                         Spacer()
+                        // Interactive Toggle for Accounts
+                        HStack(spacing: 2) {
+                            Button(intent: ToggleGeminiAccountIntent(targetAccount: entry.account1Name)) {
+                                Text(entry.account1Name)
+                                    .font(.system(size: 7.5, weight: entry.selectedAccount == entry.account1Name ? .black : .medium))
+                                    .foregroundColor(entry.selectedAccount == entry.account1Name ? .white : .primary.opacity(0.6))
+                                    .padding(.horizontal, 4)
+                                    .padding(.vertical, 2)
+                                    .background(entry.selectedAccount == entry.account1Name ? Color.blue : Color.clear)
+                                    .cornerRadius(3)
+                            }
+                            .buttonStyle(.plain)
+
+                            Button(intent: ToggleGeminiAccountIntent(targetAccount: entry.account2Name)) {
+                                Text(entry.account2Name)
+                                    .font(.system(size: 7.5, weight: entry.selectedAccount == entry.account2Name ? .black : .medium))
+                                    .foregroundColor(entry.selectedAccount == entry.account2Name ? .white : .primary.opacity(0.6))
+                                    .padding(.horizontal, 4)
+                                    .padding(.vertical, 2)
+                                    .background(entry.selectedAccount == entry.account2Name ? Color.blue : Color.clear)
+                                    .cornerRadius(3)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(1.5)
+                        .background(Color.primary.opacity(0.08))
+                        .cornerRadius(4)
                     }
 
                     // 5h
@@ -274,12 +335,18 @@ public struct UsageAIWidgetEntryView: View {
             }
 
             HStack(spacing: 12) {
-                VStack(spacing: 3) {
+                VStack(spacing: 2) {
                     Text("GEMINI")
                         .font(.system(size: 8, weight: .bold))
                         .foregroundColor(.blue)
+                    Button(intent: ToggleGeminiAccountIntent(targetAccount: entry.selectedAccount == entry.account1Name ? entry.account2Name : entry.account1Name)) {
+                        Text(entry.selectedAccount == entry.account1Name ? "\(entry.account1Name) ⇄" : "\(entry.account2Name) ⇄")
+                            .font(.system(size: 7, weight: .bold))
+                            .foregroundColor(.blue)
+                    }
+                    .buttonStyle(.plain)
                     Text("\(entry.geminiFiveHour)%")
-                        .font(.system(size: 18, weight: .black, design: .rounded))
+                        .font(.system(size: 16, weight: .black, design: .rounded))
                     Text("Wk: \(entry.geminiWeekly)%")
                         .font(.system(size: 8))
                         .foregroundColor(.secondary)
@@ -337,7 +404,7 @@ public struct UsageAIWidget: Widget {
         StaticConfiguration(kind: kind, provider: QuotaProvider()) { entry in
             UsageAIWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("Usage AI")
+        .configurationDisplayName("Ghee-Khatam")
         .description("Track real-time Claude & Gemini Antigravity cloud quotas.")
         .supportedFamilies([.systemSmall, .systemMedium])
     }

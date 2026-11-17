@@ -30,7 +30,7 @@ public struct MenuBarPopupView: View {
                         )
 
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("Usage AI")
+                        Text("Ghee-Khatam")
                             .font(.system(size: 15, weight: .bold, design: .rounded))
                         Text(tracker.syncStatusMessage)
                             .font(.system(size: 10))
@@ -134,7 +134,7 @@ public struct MenuBarPopupView: View {
 
                 Spacer()
 
-                Button("Quit Usage AI", action: onQuit)
+                Button("Quit Ghee-Khatam", action: onQuit)
                     .font(.system(size: 11))
                     .buttonStyle(.plain)
                     .foregroundColor(.secondary)

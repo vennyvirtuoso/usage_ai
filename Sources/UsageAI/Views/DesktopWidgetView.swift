@@ -215,22 +215,23 @@ public struct DesktopWidgetView: View {
     // Gemini Account switcher on widget
     private var accountSwitcherMenu: some View {
         HStack(spacing: 3) {
-            miniAccountButton(email: settings.geminiAccount1Email, shortName: "alexa")
-            miniAccountButton(email: settings.geminiAccount2Email, shortName: "paras")
+            miniAccountButton(email: settings.geminiAccount1Email, name: settings.account1ShortName)
+            miniAccountButton(email: settings.geminiAccount2Email, name: settings.account2ShortName)
         }
         .padding(2)
-        .background(Color.black.opacity(0.35))
+        .background(Color.black.opacity(0.40))
         .cornerRadius(6)
     }
 
-    private func miniAccountButton(email: String, shortName: String) -> some View {
+    private func miniAccountButton(email: String, name: String) -> some View {
         let isSelected = settings.selectedGeminiAccountTab == email
         return Button(action: {
             settings.selectedGeminiAccountTab = email
+            tracker.updateSnapshot()
         }) {
-            Text(shortName)
+            Text(name)
                 .font(.system(size: 8, weight: isSelected ? .black : .medium))
-                .foregroundColor(isSelected ? .white : .white.opacity(0.5))
+                .foregroundColor(isSelected ? .white : .white.opacity(0.55))
                 .padding(.horizontal, 5)
                 .padding(.vertical, 2)
                 .background(isSelected ? Color(hex: "#0284C7") : Color.clear)
@@ -347,8 +348,21 @@ public struct DesktopWidgetView: View {
                         valueText: "\(tracker.geminiFiveHourPercent)%"
                     )
                     .frame(width: 50, height: 50)
+                    Button(action: {
+                        if settings.selectedGeminiAccountTab == settings.geminiAccount1Email {
+                            settings.selectedGeminiAccountTab = settings.geminiAccount2Email
+                        } else {
+                            settings.selectedGeminiAccountTab = settings.geminiAccount1Email
+                        }
+                        tracker.updateSnapshot()
+                    }) {
+                        Text(settings.selectedGeminiAccountTab == settings.geminiAccount1Email ? "\(settings.account1ShortName) ⇄" : "\(settings.account2ShortName) ⇄")
+                            .font(.system(size: 7, weight: .bold))
+                            .foregroundColor(Color(hex: "#38BDF8"))
+                    }
+                    .buttonStyle(.plain)
                     Text("Wk: \(tracker.geminiWeeklyPercent)%")
-                        .font(.system(size: 9, weight: .bold))
+                        .font(.system(size: 8, weight: .bold))
                         .foregroundColor(.white.opacity(0.75))
                 }
 

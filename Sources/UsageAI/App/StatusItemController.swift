@@ -88,7 +88,7 @@ public class StatusItemController: NSObject {
             button.title = " " + displayText
         }
 
-        button.toolTip = "Usage AI — Gemini: \(UsageTracker.shared.geminiFiveHourPercent)% · Claude: \(UsageTracker.shared.claudeFiveHourPercent)%"
+        button.toolTip = "Ghee-Khatam — Gemini: \(UsageTracker.shared.geminiFiveHourPercent)% · Claude: \(UsageTracker.shared.claudeFiveHourPercent)%"
     }
 
     @objc private func statusItemClicked(_ sender: NSStatusBarButton) {
@@ -96,13 +96,13 @@ public class StatusItemController: NSObject {
 
         if event.type == .rightMouseUp {
             let menu = NSMenu()
-            menu.addItem(NSMenuItem(title: "Usage AI", action: nil, keyEquivalent: ""))
+            menu.addItem(NSMenuItem(title: "Ghee-Khatam", action: nil, keyEquivalent: ""))
             menu.addItem(NSMenuItem.separator())
             menu.addItem(NSMenuItem(title: "Refresh Cloud Quotas Now", action: #selector(refreshAction), keyEquivalent: "r"))
             menu.addItem(NSMenuItem(title: "Toggle Desktop Widget", action: #selector(toggleWidgetAction), keyEquivalent: "w"))
             menu.addItem(NSMenuItem(title: "Preferences...", action: #selector(settingsAction), keyEquivalent: ","))
             menu.addItem(NSMenuItem.separator())
-            menu.addItem(NSMenuItem(title: "Quit Usage AI", action: #selector(quitAction), keyEquivalent: "q"))
+            menu.addItem(NSMenuItem(title: "Quit Ghee-Khatam", action: #selector(quitAction), keyEquivalent: "q"))
 
             for item in menu.items {
                 item.target = self

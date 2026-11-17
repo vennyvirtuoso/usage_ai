@@ -57,6 +57,22 @@ public class AppSettings: ObservableObject {
         didSet { defaults.set(selectedGeminiAccountTab, forKey: "selectedGeminiAccountTab") }
     }
 
+    public var account1ShortName: String {
+        let email = geminiAccount1Email
+        if email.contains("@") {
+            return email.components(separatedBy: "@").first ?? "Account 1"
+        }
+        return email.isEmpty ? "Account 1" : email
+    }
+
+    public var account2ShortName: String {
+        let email = geminiAccount2Email
+        if email.contains("@") {
+            return email.components(separatedBy: "@").first ?? "Account 2"
+        }
+        return email.isEmpty ? "Account 2" : email
+    }
+
     // Desktop Widget
     @Published public var isDesktopWidgetVisible: Bool {
         didSet { defaults.set(isDesktopWidgetVisible, forKey: "isDesktopWidgetVisible") }
@@ -68,6 +84,19 @@ public class AppSettings: ObservableObject {
 
     @Published public var widgetOpacity: Double {
         didSet { defaults.set(widgetOpacity, forKey: "widgetOpacity") }
+    }
+
+    // Claude Custom / Web Session Override
+    @Published public var claudeManualOverrideEnabled: Bool {
+        didSet { defaults.set(claudeManualOverrideEnabled, forKey: "claudeManualOverrideEnabled") }
+    }
+
+    @Published public var claudeCurrentUsedPercent: Double {
+        didSet { defaults.set(claudeCurrentUsedPercent, forKey: "claudeCurrentUsedPercent") }
+    }
+
+    @Published public var claudeSessionResetTime: String {
+        didSet { defaults.set(claudeSessionResetTime, forKey: "claudeSessionResetTime") }
     }
 
     private init() {
@@ -95,15 +124,20 @@ public class AppSettings: ObservableObject {
             self.widgetTheme = .obsidian
         }
 
-        self.geminiAccount1Email = defaults.string(forKey: "geminiAccount1Email") ?? "alexasolosix@gmail.com"
-        self.geminiAccount2Email = defaults.string(forKey: "geminiAccount2Email") ?? "parasgandre@gmail.com"
+        self.geminiAccount1Email = defaults.string(forKey: "geminiAccount1Email") ?? "user1@gmail.com"
+        self.geminiAccount2Email = defaults.string(forKey: "geminiAccount2Email") ?? "user2@gmail.com"
         self.geminiAccount2ApiKey = defaults.string(forKey: "geminiAccount2ApiKey") ?? ""
-        self.selectedGeminiAccountTab = defaults.string(forKey: "selectedGeminiAccountTab") ?? "alexasolosix@gmail.com"
+        self.selectedGeminiAccountTab = defaults.string(forKey: "selectedGeminiAccountTab") ?? "user1@gmail.com"
 
         self.isDesktopWidgetVisible = defaults.bool(forKey: "isDesktopWidgetVisible")
         self.isDesktopWidgetPinned = defaults.bool(forKey: "isDesktopWidgetPinned")
 
         let savedOpacity = defaults.double(forKey: "widgetOpacity")
         self.widgetOpacity = savedOpacity > 0 ? savedOpacity : 0.98
+
+        self.claudeManualOverrideEnabled = defaults.bool(forKey: "claudeManualOverrideEnabled")
+        let savedUsed = defaults.double(forKey: "claudeCurrentUsedPercent")
+        self.claudeCurrentUsedPercent = savedUsed > 0 ? savedUsed : 8.0
+        self.claudeSessionResetTime = defaults.string(forKey: "claudeSessionResetTime") ?? "7:10 AM"
     }
 }

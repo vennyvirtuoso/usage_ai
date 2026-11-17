@@ -6,9 +6,5 @@
     <true/>
     <key>com.apple.security.network.client</key>
     <true/>
-    <key>com.apple.security.application-groups</key>
-    <array>
-        <string>66L54RP9BF.com.usageai.mac</string>
-    </array>
 </dict>
 </plist>

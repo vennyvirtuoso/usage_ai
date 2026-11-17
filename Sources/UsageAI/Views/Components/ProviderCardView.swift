@@ -41,7 +41,7 @@ public struct ProviderCardView: View {
                                 .fill(Color.green)
                                 .frame(width: 6, height: 6)
                         }
-                        Text(isGemini ? "Google Cloud (Synced All Servers)" : "Anthropic Cloud (vijendra9753@gmail.com)")
+                        Text(isGemini ? "Google Cloud (Synced All Servers)" : "Anthropic Cloud (Claude Code)")
                             .font(.system(size: 9))
                             .foregroundColor(.secondary)
                     }
@@ -72,8 +72,8 @@ public struct ProviderCardView: View {
                         .foregroundColor(.secondary)
 
                     HStack(spacing: 4) {
-                        accountButton(email: settings.geminiAccount1Email, label: "alexasolosix@gmail.com")
-                        accountButton(email: settings.geminiAccount2Email, label: "parasgandre@gmail.com")
+                        accountButton(email: settings.geminiAccount1Email, label: settings.geminiAccount1Email)
+                        accountButton(email: settings.geminiAccount2Email, label: settings.geminiAccount2Email)
                     }
                     .padding(3)
                     .background(Color.primary.opacity(0.05))
@@ -102,7 +102,7 @@ public struct ProviderCardView: View {
                             Text("\(Int(fiveHourRem * 100))%")
                                 .font(.system(size: 13, weight: .bold, design: .rounded))
                                 .foregroundColor(.green)
-                            Text("(resets in \(fiveHourCountdown))")
+                            Text(formatResetLabel(fiveHourCountdown))
                                 .font(.system(size: 9))
                                 .foregroundColor(.secondary)
                         }
@@ -118,7 +118,7 @@ public struct ProviderCardView: View {
                             Text("\(Int(weeklyRem * 100))%")
                                 .font(.system(size: 13, weight: .bold, design: .rounded))
                                 .foregroundColor(weeklyRem < 0.25 ? .red : .blue)
-                            Text("(resets in \(weeklyCountdown))")
+                            Text(formatResetLabel(weeklyCountdown))
                                 .font(.system(size: 9))
                                 .foregroundColor(.secondary)
                         }
@@ -140,7 +140,7 @@ public struct ProviderCardView: View {
                             Text("\(Int(fiveHourRem * 100))%")
                                 .font(.system(size: 13, weight: .bold, design: .rounded))
                                 .foregroundColor(.green)
-                            Text("(resets in \(claude?.fiveHourResetCountdown ?? "3h 12m"))")
+                            Text(formatResetLabel(claude?.fiveHourResetCountdown ?? "3h 12m"))
                                 .font(.system(size: 9))
                                 .foregroundColor(.secondary)
                         }
@@ -156,7 +156,7 @@ public struct ProviderCardView: View {
                             Text("\(Int(weeklyRem * 100))%")
                                 .font(.system(size: 13, weight: .bold, design: .rounded))
                                 .foregroundColor(.orange)
-                            Text("(resets in \(claude?.sevenDayResetCountdown ?? "1d 15h"))")
+                            Text(formatResetLabel(claude?.sevenDayResetCountdown ?? "1d 15h"))
                                 .font(.system(size: 9))
                                 .foregroundColor(.secondary)
                         }
@@ -221,5 +221,13 @@ public struct ProviderCardView: View {
             }
         }
         .frame(height: 6)
+    }
+
+    private func formatResetLabel(_ countdown: String) -> String {
+        let trimmed = countdown.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.lowercased() == "ready" {
+            return "(Ready)"
+        }
+        return "(resets in \(trimmed))"
     }
 }

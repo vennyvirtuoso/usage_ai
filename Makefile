@@ -21,14 +21,8 @@ test:
 		Tests/RunTests.swift \
 		-o /tmp/run_tests && /tmp/run_tests
 
-install: build
-	@echo "Installing Usage AI to /Applications..."
-	@pkill -9 -f "Usage AI.app" 2>/dev/null || true
-	@pkill -9 -f "UsageAI" 2>/dev/null || true
-	@sleep 1
-	@rm -rf "/Applications/Usage AI.app"
-	@cp -R "build/Usage AI.app" "/Applications/"
-	@echo "Installed to /Applications/Usage AI.app"
+install:
+	./install.sh
 
 clean:
 	rm -rf build /tmp/swift-tmp /tmp/swift-cache /tmp/run_tests
