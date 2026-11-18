@@ -99,6 +99,10 @@ public class AppSettings: ObservableObject {
         didSet { defaults.set(claudeSessionResetTime, forKey: "claudeSessionResetTime") }
     }
 
+    @Published public var claudeCustomToken: String {
+        didSet { defaults.set(claudeCustomToken, forKey: "claudeCustomToken") }
+    }
+
     private init() {
         let savedInterval = defaults.double(forKey: "refreshIntervalSeconds")
         self.refreshIntervalSeconds = savedInterval >= 300.0 ? savedInterval : 1200.0
@@ -139,5 +143,6 @@ public class AppSettings: ObservableObject {
         let savedUsed = defaults.double(forKey: "claudeCurrentUsedPercent")
         self.claudeCurrentUsedPercent = savedUsed > 0 ? savedUsed : 8.0
         self.claudeSessionResetTime = defaults.string(forKey: "claudeSessionResetTime") ?? "7:10 AM"
+        self.claudeCustomToken = defaults.string(forKey: "claudeCustomToken") ?? ""
     }
 }

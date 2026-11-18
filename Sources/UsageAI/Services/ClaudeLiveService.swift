@@ -74,8 +74,14 @@ public final class ClaudeLiveService: @unchecked Sendable {
 
     public init() {}
 
-    public func getAccessToken() -> String? {
-        // 1. Try Keychain
+    public struct ClaudeKeychainCredentials {
+        public var accessToken: String
+        public var refreshToken: String
+        public var expiresAt: Double
+        public var rawJSON: [String: Any]
+    }
+
+    public func readKeychainCredentials() -> ClaudeKeychainCredentials? {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/security")
         process.arguments = ["find-generic-password", "-s", "Claude Code-credentials", "-w"]
@@ -83,21 +89,95 @@ public final class ClaudeLiveService: @unchecked Sendable {
         process.standardOutput = pipe
         process.standardError = Pipe()
 
-        if (try? process.run()) != nil {
-            process.waitUntilExit()
-            if process.terminationStatus == 0 {
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                if let raw = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
-                   let rawData = raw.data(using: .utf8),
-                   let json = try? JSONSerialization.jsonObject(with: rawData) as? [String: Any],
-                   let claudeAi = json["claudeAiOauth"] as? [String: Any],
-                   let token = claudeAi["accessToken"] as? String, !token.isEmpty {
-                    return token
-                }
-            }
+        guard (try? process.run()) != nil else { return nil }
+        process.waitUntilExit()
+        guard process.terminationStatus == 0 else { return nil }
+
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        guard let raw = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+              let rawData = raw.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: rawData) as? [String: Any],
+              let claudeAi = json["claudeAiOauth"] as? [String: Any],
+              let token = claudeAi["accessToken"] as? String, !token.isEmpty else {
+            return nil
         }
 
-        return nil
+        let refreshToken = claudeAi["refreshToken"] as? String ?? ""
+        let expiresAt = claudeAi["expiresAt"] as? Double ?? 0.0
+
+        return ClaudeKeychainCredentials(
+            accessToken: token,
+            refreshToken: refreshToken,
+            expiresAt: expiresAt,
+            rawJSON: json
+        )
+    }
+
+    public func getAccessToken() -> String? {
+        readKeychainCredentials()?.accessToken
+    }
+
+    public func saveCredentialsToKeychain(json: [String: Any]) {
+        guard let data = try? JSONSerialization.data(withJSONObject: json),
+              let jsonStr = String(data: data, encoding: .utf8) else { return }
+
+        let username = NSUserName()
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/security")
+        process.arguments = [
+            "add-generic-password",
+            "-U",
+            "-s", "Claude Code-credentials",
+            "-a", username,
+            "-w", jsonStr
+        ]
+        try? process.run()
+        process.waitUntilExit()
+    }
+
+    public func refreshOAuthToken(refreshToken: String, existingJSON: [String: Any]) async -> String? {
+        guard !refreshToken.isEmpty,
+              let url = URL(string: "https://platform.claude.com/v1/oauth/token") else { return nil }
+
+        let payload: [String: Any] = [
+            "grant_type": "refresh_token",
+            "refresh_token": refreshToken,
+            "client_id": "9d1c250a-e61b-44d9-88ed-5944d1962f5e"
+        ]
+
+        guard let httpBody = try? JSONSerialization.data(withJSONObject: payload) else { return nil }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("claude-code", forHTTPHeaderField: "User-Agent")
+        request.httpBody = httpBody
+        request.timeoutInterval = 15
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpRes = response as? HTTPURLResponse, httpRes.statusCode == 200,
+                  let resJSON = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let newAccessToken = resJSON["access_token"] as? String else {
+                return nil
+            }
+
+            let newRefreshToken = resJSON["refresh_token"] as? String ?? refreshToken
+            let expiresIn = resJSON["expires_in"] as? Double ?? 28800.0
+            let newExpiresAt = (Date().timeIntervalSince1970 + expiresIn) * 1000.0
+
+            var updatedJSON = existingJSON
+            var oauthDict = (updatedJSON["claudeAiOauth"] as? [String: Any]) ?? [:]
+            oauthDict["accessToken"] = newAccessToken
+            oauthDict["refreshToken"] = newRefreshToken
+            oauthDict["expiresAt"] = newExpiresAt
+            updatedJSON["claudeAiOauth"] = oauthDict
+
+            self.saveCredentialsToKeychain(json: updatedJSON)
+            return newAccessToken
+        } catch {
+            return nil
+        }
     }
 
     private var rateLimitedUntil: Date? = nil
@@ -116,14 +196,41 @@ public final class ClaudeLiveService: @unchecked Sendable {
             return readFromLocalCache()
         }
 
-        // First try live API if token exists
-        if let token = getAccessToken() {
-            if let usage = await fetchFromAnthropicAPI(token: token) {
+        // 1. Custom token in Preferences (if set)
+        let customToken = AppSettings.shared.claudeCustomToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !customToken.isEmpty {
+            if let usage = await fetchFromAnthropicAPI(token: customToken) {
                 return usage
             }
         }
 
-        // Fallback to ~/.claude.json cachedUsageUtilization
+        // 2. Keychain token with proactive auto-refresh
+        if let creds = readKeychainCredentials() {
+            var token = creds.accessToken
+            let nowMs = Date().timeIntervalSince1970 * 1000.0
+
+            // If token has expired or is expiring in under 5 minutes, refresh proactively!
+            if creds.expiresAt > 0 && nowMs > (creds.expiresAt - 300_000.0) && !creds.refreshToken.isEmpty {
+                if let refreshed = await refreshOAuthToken(refreshToken: creds.refreshToken, existingJSON: creds.rawJSON) {
+                    token = refreshed
+                }
+            }
+
+            if let usage = await fetchFromAnthropicAPI(token: token) {
+                return usage
+            }
+
+            // If API returned failure (e.g. 401 Unauthorized), attempt refresh & retry
+            if !creds.refreshToken.isEmpty {
+                if let refreshed = await refreshOAuthToken(refreshToken: creds.refreshToken, existingJSON: creds.rawJSON) {
+                    if let usage = await fetchFromAnthropicAPI(token: refreshed) {
+                        return usage
+                    }
+                }
+            }
+        }
+
+        // 3. Fallback to ~/.claude.json cachedUsageUtilization
         return readFromLocalCache()
     }
 

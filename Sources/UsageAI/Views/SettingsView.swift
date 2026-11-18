@@ -160,10 +160,21 @@ public struct SettingsView: View {
                             Text("Account: Connected (Claude Pro)")
                                 .font(.subheadline)
                                 .bold()
-                            Text("Connected via macOS Keychain (Claude Code CLI)")
+                            Text("Auto-refreshed in background via Keychain OAuth")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Custom Claude OAuth / Session Token (Optional):")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                        SecureField("sk-ant-... (optional override)", text: $settings.claudeCustomToken)
+                            .textFieldStyle(.roundedBorder)
+                        Text("Ghee-Khatam automatically refreshes your session in the background so you don't need to run Claude in your terminal. You can also paste an explicit token here.")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
                     }
 
                     Divider()
