@@ -53,6 +53,14 @@ public class AppSettings: ObservableObject {
         didSet { defaults.set(geminiAccount2ApiKey, forKey: "geminiAccount2ApiKey") }
     }
 
+    @Published public var geminiAccount3Email: String {
+        didSet { defaults.set(geminiAccount3Email, forKey: "geminiAccount3Email") }
+    }
+
+    @Published public var geminiAccount3ApiKey: String {
+        didSet { defaults.set(geminiAccount3ApiKey, forKey: "geminiAccount3ApiKey") }
+    }
+
     @Published public var selectedGeminiAccountTab: String {
         didSet { defaults.set(selectedGeminiAccountTab, forKey: "selectedGeminiAccountTab") }
     }
@@ -71,6 +79,14 @@ public class AppSettings: ObservableObject {
             return email.components(separatedBy: "@").first ?? "Account 2"
         }
         return email.isEmpty ? "Account 2" : email
+    }
+
+    public var account3ShortName: String {
+        let email = geminiAccount3Email
+        if email.contains("@") {
+            return email.components(separatedBy: "@").first ?? "Account 3"
+        }
+        return email.isEmpty ? "Account 3" : email
     }
 
     // Desktop Widget
@@ -131,6 +147,8 @@ public class AppSettings: ObservableObject {
         self.geminiAccount1Email = defaults.string(forKey: "geminiAccount1Email") ?? "user1@gmail.com"
         self.geminiAccount2Email = defaults.string(forKey: "geminiAccount2Email") ?? "user2@gmail.com"
         self.geminiAccount2ApiKey = defaults.string(forKey: "geminiAccount2ApiKey") ?? ""
+        self.geminiAccount3Email = defaults.string(forKey: "geminiAccount3Email") ?? "user3@gmail.com"
+        self.geminiAccount3ApiKey = defaults.string(forKey: "geminiAccount3ApiKey") ?? ""
         self.selectedGeminiAccountTab = defaults.string(forKey: "selectedGeminiAccountTab") ?? "user1@gmail.com"
 
         self.isDesktopWidgetVisible = defaults.bool(forKey: "isDesktopWidgetVisible")

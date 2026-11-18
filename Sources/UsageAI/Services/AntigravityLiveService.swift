@@ -152,6 +152,7 @@ public final class AntigravityLiveService: @unchecked Sendable {
         // Populate configured accounts
         let email1 = AppSettings.shared.geminiAccount1Email
         let email2 = AppSettings.shared.geminiAccount2Email
+        let email3 = AppSettings.shared.geminiAccount3Email
 
         let acc1 = GeminiAccountQuota(
             email: email1,
@@ -174,7 +175,21 @@ public final class AntigravityLiveService: @unchecked Sendable {
             tierName: "Gemini Account"
         )
 
-        result.accounts = [acc1, acc2]
+        var accounts = [acc1, acc2]
+        if !email3.isEmpty {
+            let acc3 = GeminiAccountQuota(
+                email: email3,
+                fiveHourRemaining: 1.0,
+                fiveHourResetCountdown: "5h limit",
+                weeklyRemaining: 1.0,
+                weeklyResetCountdown: "7d limit",
+                isConnected: true,
+                tierName: "Gemini Account"
+            )
+            accounts.append(acc3)
+        }
+
+        result.accounts = accounts
         result.activeAccountEmail = email1
 
         return result

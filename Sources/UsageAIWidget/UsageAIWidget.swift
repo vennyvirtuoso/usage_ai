@@ -37,6 +37,7 @@ public struct QuotaTimelineEntry: TimelineEntry {
     public let selectedAccount: String
     public let account1Name: String
     public let account2Name: String
+    public let account3Name: String
     public let hasClaude: Bool
     public let hasGemini: Bool
 }
@@ -58,6 +59,7 @@ public struct QuotaProvider: TimelineProvider {
             selectedAccount: "Account 1",
             account1Name: "Account 1",
             account2Name: "Account 2",
+            account3Name: "Account 3",
             hasClaude: true,
             hasGemini: true
         )
@@ -94,6 +96,7 @@ public struct QuotaProvider: TimelineProvider {
                 selectedAccount: snapshot.selectedGeminiAccount,
                 account1Name: snapshot.account1Name,
                 account2Name: snapshot.account2Name,
+                account3Name: snapshot.account3Name,
                 hasClaude: snapshot.hasClaude,
                 hasGemini: snapshot.hasGemini
             )
@@ -162,6 +165,7 @@ public struct QuotaProvider: TimelineProvider {
             selectedAccount: "Account 1",
             account1Name: "Account 1",
             account2Name: "Account 2",
+            account3Name: "Account 3",
             hasClaude: true,
             hasGemini: true
         )
@@ -216,9 +220,9 @@ public struct UsageAIWidgetEntryView: View {
                         HStack(spacing: 2) {
                             Button(intent: ToggleGeminiAccountIntent(targetAccount: entry.account1Name)) {
                                 Text(entry.account1Name)
-                                    .font(.system(size: 7.5, weight: entry.selectedAccount == entry.account1Name ? .black : .medium))
+                                    .font(.system(size: 7.0, weight: entry.selectedAccount == entry.account1Name ? .black : .medium))
                                     .foregroundColor(entry.selectedAccount == entry.account1Name ? .white : .primary.opacity(0.6))
-                                    .padding(.horizontal, 4)
+                                    .padding(.horizontal, 3)
                                     .padding(.vertical, 2)
                                     .background(entry.selectedAccount == entry.account1Name ? Color.blue : Color.clear)
                                     .cornerRadius(3)
@@ -227,14 +231,27 @@ public struct UsageAIWidgetEntryView: View {
 
                             Button(intent: ToggleGeminiAccountIntent(targetAccount: entry.account2Name)) {
                                 Text(entry.account2Name)
-                                    .font(.system(size: 7.5, weight: entry.selectedAccount == entry.account2Name ? .black : .medium))
+                                    .font(.system(size: 7.0, weight: entry.selectedAccount == entry.account2Name ? .black : .medium))
                                     .foregroundColor(entry.selectedAccount == entry.account2Name ? .white : .primary.opacity(0.6))
-                                    .padding(.horizontal, 4)
+                                    .padding(.horizontal, 3)
                                     .padding(.vertical, 2)
                                     .background(entry.selectedAccount == entry.account2Name ? Color.blue : Color.clear)
                                     .cornerRadius(3)
                             }
                             .buttonStyle(.plain)
+
+                            if !entry.account3Name.isEmpty && entry.account3Name != "Account 3" && entry.account3Name != "user3" {
+                                Button(intent: ToggleGeminiAccountIntent(targetAccount: entry.account3Name)) {
+                                    Text(entry.account3Name)
+                                        .font(.system(size: 7.0, weight: entry.selectedAccount == entry.account3Name ? .black : .medium))
+                                        .foregroundColor(entry.selectedAccount == entry.account3Name ? .white : .primary.opacity(0.6))
+                                        .padding(.horizontal, 3)
+                                        .padding(.vertical, 2)
+                                        .background(entry.selectedAccount == entry.account3Name ? Color.blue : Color.clear)
+                                        .cornerRadius(3)
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
                         .padding(1.5)
                         .background(Color.primary.opacity(0.08))

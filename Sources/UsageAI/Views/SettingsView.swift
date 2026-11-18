@@ -141,6 +141,22 @@ public struct SettingsView: View {
                         SecureField("AIzaSy... (optional)", text: $settings.geminiAccount2ApiKey)
                             .textFieldStyle(.roundedBorder)
                     }
+
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Third Account:")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        TextField("user3@gmail.com", text: $settings.geminiAccount3Email)
+                            .textFieldStyle(.roundedBorder)
+
+                        Text("Optional Gemini API Key for third account:")
+                            .font(.caption)
+                            .padding(.top, 4)
+                        SecureField("AIzaSy... (optional)", text: $settings.geminiAccount3ApiKey)
+                            .textFieldStyle(.roundedBorder)
+                    }
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)

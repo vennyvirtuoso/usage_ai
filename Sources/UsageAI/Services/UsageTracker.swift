@@ -112,10 +112,19 @@ public class UsageTracker: ObservableObject {
         let claudeQuota = claudeCloudUsage
         let email1 = AppSettings.shared.geminiAccount1Email
         let email2 = AppSettings.shared.geminiAccount2Email
+        let email3 = AppSettings.shared.geminiAccount3Email
         let acc1 = agyQuota?.accounts.first(where: { $0.email == email1 })
         let acc2 = agyQuota?.accounts.first(where: { $0.email == email2 })
+        let acc3 = agyQuota?.accounts.first(where: { $0.email == email3 })
 
-        let selected = AppSettings.shared.selectedGeminiAccountTab == email2 ? AppSettings.shared.account2ShortName : AppSettings.shared.account1ShortName
+        let selected: String
+        if AppSettings.shared.selectedGeminiAccountTab == email3 {
+            selected = AppSettings.shared.account3ShortName
+        } else if AppSettings.shared.selectedGeminiAccountTab == email2 {
+            selected = AppSettings.shared.account2ShortName
+        } else {
+            selected = AppSettings.shared.account1ShortName
+        }
 
         let snapshot = SharedQuotaSnapshot(
             geminiFiveHourPercent: self.geminiFiveHourPercent,
@@ -138,6 +147,11 @@ public class UsageTracker: ObservableObject {
             account2Weekly: acc2?.weeklyPercent ?? 100,
             account2FiveHourCountdown: acc2?.fiveHourResetCountdown ?? "Ready",
             account2WeeklyCountdown: acc2?.weeklyResetCountdown ?? "7d limit",
+            account3Name: AppSettings.shared.account3ShortName,
+            account3FiveHour: acc3?.fiveHourPercent ?? 100,
+            account3Weekly: acc3?.weeklyPercent ?? 100,
+            account3FiveHourCountdown: acc3?.fiveHourResetCountdown ?? "Ready",
+            account3WeeklyCountdown: acc3?.weeklyResetCountdown ?? "7d limit",
             hasClaude: self.isClaudeDetected,
             hasGemini: self.isGeminiDetected
         )

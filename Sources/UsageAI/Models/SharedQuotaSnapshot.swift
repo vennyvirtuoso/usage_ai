@@ -25,6 +25,12 @@ public struct SharedQuotaSnapshot: Codable {
     public var account2FiveHourCountdown: String
     public var account2WeeklyCountdown: String
 
+    public var account3Name: String
+    public var account3FiveHour: Int
+    public var account3Weekly: Int
+    public var account3FiveHourCountdown: String
+    public var account3WeeklyCountdown: String
+
     public var hasClaude: Bool
     public var hasGemini: Bool
 
@@ -49,6 +55,11 @@ public struct SharedQuotaSnapshot: Codable {
         account2Weekly: Int = 100,
         account2FiveHourCountdown: String = "Ready",
         account2WeeklyCountdown: String = "7d limit",
+        account3Name: String = "Account 3",
+        account3FiveHour: Int = 100,
+        account3Weekly: Int = 100,
+        account3FiveHourCountdown: String = "Ready",
+        account3WeeklyCountdown: String = "7d limit",
         hasClaude: Bool = true,
         hasGemini: Bool = true
     ) {
@@ -76,6 +87,12 @@ public struct SharedQuotaSnapshot: Codable {
         self.account2Weekly = account2Weekly
         self.account2FiveHourCountdown = account2FiveHourCountdown
         self.account2WeeklyCountdown = account2WeeklyCountdown
+
+        self.account3Name = account3Name
+        self.account3FiveHour = account3FiveHour
+        self.account3Weekly = account3Weekly
+        self.account3FiveHourCountdown = account3FiveHourCountdown
+        self.account3WeeklyCountdown = account3WeeklyCountdown
     }
 
     enum CodingKeys: String, CodingKey {
@@ -85,6 +102,7 @@ public struct SharedQuotaSnapshot: Codable {
         case selectedGeminiAccount
         case account1Name, account1FiveHour, account1Weekly, account1FiveHourCountdown, account1WeeklyCountdown
         case account2Name, account2FiveHour, account2Weekly, account2FiveHourCountdown, account2WeeklyCountdown
+        case account3Name, account3FiveHour, account3Weekly, account3FiveHourCountdown, account3WeeklyCountdown
         case hasClaude, hasGemini
     }
 
@@ -115,6 +133,12 @@ public struct SharedQuotaSnapshot: Codable {
         account2Weekly = try c.decodeIfPresent(Int.self, forKey: .account2Weekly) ?? 100
         account2FiveHourCountdown = try c.decodeIfPresent(String.self, forKey: .account2FiveHourCountdown) ?? "Ready"
         account2WeeklyCountdown = try c.decodeIfPresent(String.self, forKey: .account2WeeklyCountdown) ?? "7d limit"
+
+        account3Name = try c.decodeIfPresent(String.self, forKey: .account3Name) ?? "Account 3"
+        account3FiveHour = try c.decodeIfPresent(Int.self, forKey: .account3FiveHour) ?? 100
+        account3Weekly = try c.decodeIfPresent(Int.self, forKey: .account3Weekly) ?? 100
+        account3FiveHourCountdown = try c.decodeIfPresent(String.self, forKey: .account3FiveHourCountdown) ?? "Ready"
+        account3WeeklyCountdown = try c.decodeIfPresent(String.self, forKey: .account3WeeklyCountdown) ?? "7d limit"
     }
 
     public static func load() -> SharedQuotaSnapshot? {
@@ -160,7 +184,12 @@ public struct SharedQuotaSnapshot: Codable {
     public static func toggleAccount(to target: String) {
         if var snapshot = SharedQuotaSnapshot.load() {
             snapshot.selectedGeminiAccount = target
-            if target.contains("paras") {
+            if target == snapshot.account3Name {
+                snapshot.geminiFiveHourPercent = snapshot.account3FiveHour
+                snapshot.geminiWeeklyPercent = snapshot.account3Weekly
+                snapshot.geminiFiveHourCountdown = snapshot.account3FiveHourCountdown
+                snapshot.geminiWeeklyCountdown = snapshot.account3WeeklyCountdown
+            } else if target == snapshot.account2Name || target.contains("paras") {
                 snapshot.geminiFiveHourPercent = snapshot.account2FiveHour
                 snapshot.geminiWeeklyPercent = snapshot.account2Weekly
                 snapshot.geminiFiveHourCountdown = snapshot.account2FiveHourCountdown

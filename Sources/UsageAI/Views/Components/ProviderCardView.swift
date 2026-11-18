@@ -90,6 +90,9 @@ public struct ProviderCardView: View {
                     HStack(spacing: 4) {
                         accountButton(email: settings.geminiAccount1Email, label: settings.account1ShortName)
                         accountButton(email: settings.geminiAccount2Email, label: settings.account2ShortName)
+                        if !settings.geminiAccount3Email.isEmpty {
+                            accountButton(email: settings.geminiAccount3Email, label: settings.account3ShortName)
+                        }
                     }
                     .padding(3)
                     .background(Color.primary.opacity(0.05))
